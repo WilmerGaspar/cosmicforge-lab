@@ -1,15 +1,13 @@
 """
-CosmicForge Lab - Professional Edition
+CosmicForge Lab - Personal Edition
 Diseño de Materiales Inspirado en Firmas Astrofísicas
-Versión 3.0 - Professional Scientific Platform
+Versión 3.1 - Edición Personal Mejorada
 
-Features:
-- 15+ ejemplos de objetos astrofísicos
-- Materials Project API integration
-- Visualización 3D interactiva
-- Export PDF con conclusión filosófica (Manin)
-- Sistema de aleaciones
-- Diseño profesional
+Mejoras:
+- Letras legibles y claras
+- PDF con formato correcto
+- Proceso de producción detallado
+- Guía de síntesis paso a paso
 """
 
 import streamlit as st
@@ -40,22 +38,28 @@ try:
 except:
     PLOTLY_AVAILABLE = False
 
-# PDF generation
+# PDF generation con FPDF (más confiable)
 try:
-    from reportlab.lib.pagesizes import letter, A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-    from reportlab.lib import colors
+    from fpdf import FPDF
     PDF_AVAILABLE = True
 except:
-    PDF_AVAILABLE = False
+    try:
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib import colors
+        PDF_AVAILABLE = True
+        USE_REPORTLAB = True
+    except:
+        PDF_AVAILABLE = False
+        USE_REPORTLAB = False
 
 # ============================================================================
 # PAGE CONFIGURATION
 # ============================================================================
 
 st.set_page_config(
-    page_title="CosmicForge Lab Pro",
+    page_title="CosmicForge Lab",
     page_icon="🔬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -73,335 +77,447 @@ if 'recipe' not in st.session_state:
     st.session_state.recipe = None
 if 'raw_json' not in st.session_state:
     st.session_state.raw_json = None
-if 'alloy_elements' not in st.session_state:
-    st.session_state.alloy_elements = []
 
 # ============================================================================
 # DATABASES
 # ============================================================================
 
-# 15+ Ejemplos de objetos astrofísicos
+# Ejemplos de objetos astrofísicos
 ASTROPHYSICAL_EXAMPLES = {
-    # Nebulosas
     "Orion Nebula M42": {
         "fractal_dimension": 1.654, "criticality_score": 0.722, "entropy": 0.019,
         "anisotropy": 0.329, "turbulence_beta": 2.278, "lyapunov_max": -0.227,
-        "mode": "balanced", "type": "Emission Nebula", "distance": "1,344 ly",
-        "description": "Nebulosa de emisión activa con formación estelar intensa"
+        "mode": "balanced", "type": "Nebulosa de Emisión", "distance": "1,344 ly"
     },
     "Crab Nebula M1": {
         "fractal_dimension": 1.82, "criticality_score": 0.89, "entropy": 0.032,
         "anisotropy": 0.456, "turbulence_beta": 2.45, "lyapunov_max": -0.15,
-        "mode": "turbulent", "type": "Supernova Remnant", "distance": "6,500 ly",
-        "description": "Remanente de supernova con pulsar central, alta turbulencia"
+        "mode": "turbulent", "type": "Remanente Supernova", "distance": "6,500 ly"
     },
     "Ring Nebula M57": {
         "fractal_dimension": 1.45, "criticality_score": 0.55, "entropy": 0.012,
         "anisotropy": 0.28, "turbulence_beta": 1.95, "lyapunov_max": -0.35,
-        "mode": "stable", "type": "Planetary Nebula", "distance": "2,283 ly",
-        "description": "Nebulosa planetaria simétrica, estructura estable"
+        "mode": "stable", "type": "Nebulosa Planetaria", "distance": "2,283 ly"
     },
-    "Eagle Nebula M16": {
-        "fractal_dimension": 1.78, "criticality_score": 0.81, "entropy": 0.028,
-        "anisotropy": 0.42, "turbulence_beta": 2.35, "lyapunov_max": -0.18,
-        "mode": "turbulent", "type": "Emission Nebula", "distance": "7,000 ly",
-        "description": "Famosa por los 'Pilares de la Creación', alta formación estelar"
-    },
-    "Horsehead Nebula IC 434": {
-        "fractal_dimension": 1.52, "criticality_score": 0.63, "entropy": 0.015,
-        "anisotropy": 0.35, "turbulence_beta": 2.10, "lyapunov_max": -0.25,
-        "mode": "balanced", "type": "Dark Nebula", "distance": "1,500 ly",
-        "description": "Nebulosa oscura con estructura fractal distintiva"
-    },
-    "Helix Nebula NGC 7293": {
-        "fractal_dimension": 1.48, "criticality_score": 0.58, "entropy": 0.011,
-        "anisotropy": 0.31, "turbulence_beta": 2.02, "lyapunov_max": -0.32,
-        "mode": "stable", "type": "Planetary Nebula", "distance": "655 ly",
-        "description": "Nebulosa planetaria más cercana, estructura en espiral"
-    },
-    
-    # Galaxias
     "Triangulum Galaxy M33": {
         "fractal_dimension": 1.93, "criticality_score": 0.78, "entropy": 0.00000964,
         "anisotropy": 0.23, "turbulence_beta": 1.84, "lyapunov_max": 0.11,
-        "mode": "balanced", "type": "Spiral Galaxy", "distance": "2.73M ly",
-        "description": "Galaxia espiral con alta estructura fractal"
+        "mode": "balanced", "type": "Galaxia Espiral", "distance": "2.73M ly"
     },
     "Andromeda Galaxy M31": {
         "fractal_dimension": 1.88, "criticality_score": 0.85, "entropy": 0.000012,
         "anisotropy": 0.19, "turbulence_beta": 1.92, "lyapunov_max": 0.08,
-        "mode": "balanced", "type": "Spiral Galaxy", "distance": "2.537M ly",
-        "description": "Galaxia espiral más cercana a la Vía Láctea"
+        "mode": "balanced", "type": "Galaxia Espiral", "distance": "2.537M ly"
     },
-    "Whirlpool Galaxy M51": {
-        "fractal_dimension": 1.95, "criticality_score": 0.91, "entropy": 0.000015,
-        "anisotropy": 0.22, "turbulence_beta": 1.98, "lyapunov_max": 0.12,
-        "mode": "turbulent", "type": "Interacting Spiral", "distance": "23M ly",
-        "description": "Galaxia en interacción con alta complejidad dinámica"
-    },
-    "Sombrero Galaxy M104": {
-        "fractal_dimension": 1.72, "criticality_score": 0.68, "entropy": 0.000008,
-        "anisotropy": 0.45, "turbulence_beta": 2.15, "lyapunov_max": 0.05,
-        "mode": "stable", "type": "Spiral Galaxy", "distance": "31.1M ly",
-        "description": "Galaxia con anillo de polvo distintivo"
-    },
-    
-    # Objetos especiales
-    "Pillars of Creation": {
-        "fractal_dimension": 1.85, "criticality_score": 0.88, "entropy": 0.035,
-        "anisotropy": 0.52, "turbulence_beta": 2.55, "lyapunov_max": -0.12,
-        "mode": "turbulent", "type": "Molecular Cloud", "distance": "6,500 ly",
-        "description": "Estructuras de gas y polvo con alta formación estelar"
+    "Eagle Nebula M16": {
+        "fractal_dimension": 1.78, "criticality_score": 0.81, "entropy": 0.028,
+        "anisotropy": 0.42, "turbulence_beta": 2.35, "lyapunov_max": -0.18,
+        "mode": "turbulent", "type": "Nebulosa de Emisión", "distance": "7,000 ly"
     },
     "Tarantula Nebula": {
         "fractal_dimension": 1.91, "criticality_score": 0.93, "entropy": 0.045,
         "anisotropy": 0.58, "turbulence_beta": 2.68, "lyapunov_max": 0.15,
-        "mode": "turbulent", "type": "HII Region", "distance": "160,000 ly",
-        "description": "Región de formación estelar más activa conocida"
+        "mode": "turbulent", "type": "Región HII", "distance": "160,000 ly"
     },
-    "Carina Nebula NGC 3372": {
-        "fractal_dimension": 1.76, "criticality_score": 0.79, "entropy": 0.029,
-        "anisotropy": 0.41, "turbulence_beta": 2.32, "lyapunov_max": -0.16,
-        "mode": "balanced", "type": "Emission Nebula", "distance": "8,500 ly",
-        "description": "Nebulosa gigante con estrellas masivas"
+    "Pillars of Creation": {
+        "fractal_dimension": 1.85, "criticality_score": 0.88, "entropy": 0.035,
+        "anisotropy": 0.52, "turbulence_beta": 2.55, "lyapunov_max": -0.12,
+        "mode": "turbulent", "type": "Nube Molecular", "distance": "6,500 ly"
     },
-    "Bubble Nebula NGC 7635": {
-        "fractal_dimension": 1.58, "criticality_score": 0.62, "entropy": 0.018,
-        "anisotropy": 0.38, "turbulence_beta": 2.08, "lyapunov_max": -0.21,
-        "mode": "balanced", "type": "Emission Nebula", "distance": "7,100 ly",
-        "description": "Burbuja expandida por viento estelar"
+    "Whirlpool Galaxy M51": {
+        "fractal_dimension": 1.95, "criticality_score": 0.91, "entropy": 0.000015,
+        "anisotropy": 0.22, "turbulence_beta": 1.98, "lyapunov_max": 0.12,
+        "mode": "turbulent", "type": "Galaxia Interactuante", "distance": "23M ly"
     },
-    "Lagoon Nebula M8": {
-        "fractal_dimension": 1.69, "criticality_score": 0.74, "entropy": 0.022,
-        "anisotropy": 0.36, "turbulence_beta": 2.18, "lyapunov_max": -0.19,
-        "mode": "balanced", "type": "Emission Nebula", "distance": "4,100 ly",
-        "description": "Nebulosa con estructura de laguna oscura"
-    }
+    "Helix Nebula NGC 7293": {
+        "fractal_dimension": 1.48, "criticality_score": 0.58, "entropy": 0.011,
+        "anisotropy": 0.31, "turbulence_beta": 2.02, "lyapunov_max": -0.32,
+        "mode": "stable", "type": "Nebulosa Planetaria", "distance": "655 ly"
+    },
 }
 
-# Sistema de aleaciones y elementos compatibles
+# Sistema de aleaciones completo
 ALLOY_SYSTEMS = {
-    # Aleaciones binarias
-    "Ti-Al": {"name": "Titanio-Aluminio", "applications": ["Aeroespacial", "Biomédico"], "ratio": "1:1 a 3:1"},
-    "Ti-V": {"name": "Titanio-Vanadio", "applications": ["Aeroespacial", "Implantes"], "ratio": "6:4"},
-    "Fe-Ni": {"name": "Invar", "applications": ["Instrumentos de precisión"], "ratio": "64:36"},
-    "Fe-Cr": {"name": "Acero inoxidable", "applications": ["Industrial", "Médico"], "ratio": "Variable"},
-    "Cu-Ni": {"name": "Cuproníquel", "applications": ["Marino", "Monedas"], "ratio": "70:30 a 90:10"},
-    "Cu-Zn": {"name": "Latón", "applications": ["Decorativo", "Mecánico"], "ratio": "Variable"},
-    "Al-Cu": {"name": "Duraluminio", "applications": ["Aeroespacial", "Automotriz"], "ratio": "95:4"},
-    "Al-Mg": {"name": "Magnalio", "applications": ["Aeroespacial"], "ratio": "90:10"},
-    "Ni-Co": {"name": "Níquel-Cobalto", "applications": ["Magnéticos", "Catálisis"], "ratio": "Variable"},
-    "Pt-Pd": {"name": "Platino-Paladio", "applications": ["Catálisis", "Joyería"], "ratio": "Variable"},
-    
-    # Aleaciones ternarias
-    "Ti-Al-V": {"name": "Titanio TA6V", "applications": ["Aeroespacial", "Biomédico"], "ratio": "6:4:4"},
-    "Fe-Ni-Cr": {"name": "Inoxidable austenítico", "applications": ["Industrial", "Químico"], "ratio": "Variable"},
-    "Al-Cu-Mg": {"name": "Aluminio aeronáutico", "applications": ["Aeroespacial"], "ratio": "Variable"},
-    
-    # Cerámicos
-    "Al-O": {"name": "Alúmina", "applications": ["Cerámico", "Abrasivos"], "ratio": "2:3"},
-    "Ti-O": {"name": "Titania", "applications": ["Pigmentos", "Fotocatálisis"], "ratio": "1:2"},
-    "Si-O": {"name": "Sílice", "applications": ["Vidrio", "Electrónica"], "ratio": "1:2"},
-    "Zn-O": {"name": "Óxido de zinc", "applications": ["Sensores", "Protectores"], "ratio": "1:1"},
+    "Ti-Al": {
+        "name": "Titanio-Aluminio (Gamma-TiAl)",
+        "ratio": "Ti:Al = 1:1",
+        "melting_point": "1460°C",
+        "density": "3.76 g/cm³",
+        "applications": ["Turbinas aeronáuticas", "Componentes automotrices", "Implantes médicos"],
+        "synthesis": [
+            "1. Fundir Ti puro (99.9%) en horno de arco eléctrico bajo argón",
+            "2. Añadir Al puro (99.99%) en proporción 1:1 atómica",
+            "3. Homogeneizar a 1400°C por 4 horas",
+            "4. Enfriar lentamente (5°C/min) hasta 1000°C",
+            "5. Tratamiento térmico a 900°C por 2 horas",
+            "6. Enfriar al aire"
+        ],
+        "equipment": ["Horno de arco eléctrico", "Atmósfera de argón", "Crisol de grafito", "Horno de tratamiento térmico"],
+        "precursors": ["Ti esponja (99.9%)", "Al lingote (99.99%)"],
+        "safety": ["Usar guantes refractarios", "Atmósfera inerte obligatoria", "Ventilación adecuada"]
+    },
+    "Ti-Al-V (TA6V)": {
+        "name": "Titanio TA6V (Ti-6Al-4V)",
+        "ratio": "Ti:Al:V = 90:6:4",
+        "melting_point": "1650°C",
+        "density": "4.43 g/cm³",
+        "applications": ["Aeroespacial", "Implantes ortopédicos", "Industria química"],
+        "synthesis": [
+            "1. Preparar aleación maestra Ti-Al (60:40) previamente",
+            "2. Fundir Ti esponja en horno de arco bajo vacío",
+            "3. Añadir aleación maestra Ti-Al y V metálico",
+            "4. Fundir y voltear 3-5 veces para homogeneizar",
+            "5. Colar en molde de grafito precalentado",
+            "6. Forjar a 950°C para eliminar segregación",
+            "7. Tratamiento térmico: solución a 950°C + envejecimiento a 540°C"
+        ],
+        "equipment": ["Horno de arco bajo vacío", "Crisol de cobre refrigerado", "Prensa de forja", "Horno de tratamiento"],
+        "precursors": ["Ti esponja grado aeronáutico", "Al lingote", "V metálico"],
+        "safety": ["Vacío alto (<10⁻³ mbar)", "Protección radiación UV", "Evitar contaminación con O₂, N₂, H₂"]
+    },
+    "Fe-Ni (Invar)": {
+        "name": "Invar (Fe-36Ni)",
+        "ratio": "Fe:Ni = 64:36",
+        "melting_point": "1425°C",
+        "density": "8.12 g/cm³",
+        "applications": ["Instrumentos de precisión", "Relojes", "Sellos térmicos"],
+        "synthesis": [
+            "1. Fundir Fe electrolítico en horno de inducción",
+            "2. Añadir Ni electrolítico gradualmente",
+            "3. Mantener a 1500°C por 30 min bajo argón",
+            "4. Colar en lingotera precalentada",
+            "5. Laminar en caliente a 1000°C",
+            "6. Recocer a 850°C por 1 hora",
+            "7. Enfriar lentamente en horno"
+        ],
+        "equipment": ["Horno de inducción", "Atmósfera inerte", "Laminador", "Horno de recocido"],
+        "precursors": ["Fe electrolítico", "Ni electrolítico (99.9%)"],
+        "safety": ["Evitar oxidación", "Controlar temperatura exacta"]
+    },
+    "Cu-Ni (Cuproníquel)": {
+        "name": "Cuproníquel 70/30",
+        "ratio": "Cu:Ni = 70:30",
+        "melting_point": "1170°C",
+        "density": "8.94 g/cm³",
+        "applications": ["Componentes marinos", "Monedas", "Intercambiadores de calor"],
+        "synthesis": [
+            "1. Fundir Cu electrolítico en horno de inducción",
+            "2. Añadir Ni gradualmente bajo fundente bórax",
+            "3. Desoxidar con Cu-P (0.02%)",
+            "4. Colar a 1250°C en molde metálico",
+            "5. Laminar en caliente a 800°C",
+            "6. Recocer a 650°C por 2 horas"
+        ],
+        "equipment": ["Horno de inducción", "Fundente bórax", "Laminador"],
+        "precursors": ["Cu cátodo (99.99%)", "Ni electrolítico"],
+        "safety": ["Fundente para evitar oxidación", "Ventilación"]
+    },
+    "Al-Cu (Duraluminio)": {
+        "name": "Duraluminio 2024",
+        "ratio": "Al:Cu:Mg:Mn = 93.5:4.4:1.5:0.6",
+        "melting_point": "660°C",
+        "density": "2.78 g/cm³",
+        "applications": ["Estructuras aeronáuticas", "Componentes automotrices", "Herramientas"],
+        "synthesis": [
+            "1. Fundir Al primario en crisol de grafito",
+            "2. Añadir Cu, Mg y Mn como aleaciones maestras",
+            "3. Degasear con cloro o nitrógeno",
+            "4. Refinar con fundente salino",
+            "5. Colar a 700°C en molde metálico",
+            "6. Tratamiento T6: solución 495°C + temple + envejecimiento 190°C"
+        ],
+        "equipment": ["Horno de resistencia", "Crisol grafito", "Molde metálico", "Horno de tratamiento"],
+        "precursors": ["Al primario", "Cu electrolítico", "Mg lingote", "Mn metálico"],
+        "safety": ["Evitar humedad (explosión)", "Degaseado obligatorio"]
+    },
+    "TiO2 (Titania)": {
+        "name": "Óxido de Titanio (TiO₂)",
+        "ratio": "Ti:O = 1:2",
+        "melting_point": "1843°C",
+        "density": "4.23 g/cm³",
+        "applications": ["Pigmentos", "Fotocatálisis", "Celdas solares", "Recubrimientos"],
+        "synthesis": [
+            "MÉTODO SOL-GEL:",
+            "1. Disolver precursor Ti (isopropóxido de Ti) en etanol",
+            "2. Añadir agua destilada lentamente con agitación",
+            "3. Ajustar pH a 2 con HNO₃",
+            "4. Envejecer gel 24 horas",
+            "5. Secar a 100°C por 12 horas",
+            "6. Calcinación: 400°C (anatasa) o 800°C (rutilo)",
+            "",
+            "MÉTODO HIDROTERMAL:",
+            "1. Mezclar TiCl₄ con NaOH 10M",
+            "2. Transferir a autoclave",
+            "3. Calentar a 180°C por 12 horas",
+            "4. Lavar con agua hasta pH neutro",
+            "5. Secar a 80°C"
+        ],
+        "equipment": ["Matraz reacción", "Agitador magnético", "Horno mufla", "Autoclave (opcional)"],
+        "precursors": ["Isopropóxido de Ti", "TiCl₄", "Etanol", "HNO₃"],
+        "safety": ["Guantes y gafas", "Campana extractora", "TiCl₄ es corrosivo"]
+    },
+    "ZnO (Óxido de Zinc)": {
+        "name": "Óxido de Zinc (ZnO)",
+        "ratio": "Zn:O = 1:1",
+        "melting_point": "1975°C",
+        "density": "5.61 g/cm³",
+        "applications": ["Protectores solares", "Sensores de gas", "Varistores", "Catalizadores"],
+        "synthesis": [
+            "MÉTODO DE PRECIPITACIÓN:",
+            "1. Disolver Zn(NO₃)₂ en agua desionizada (0.5M)",
+            "2. Preparar solución NaOH 1M",
+            "3. Añadir NaOH gota a gota con agitación vigorosa",
+            "4. Mantener pH 10-11",
+            "5. Envejecer precipitado 2 horas",
+            "6. Filtrar y lavar con agua/etanol",
+            "7. Secar a 80°C por 12 horas",
+            "8. Calcinación: 400-600°C por 4 horas",
+            "",
+            "MÉTODO SOLVOTÉRMICO:",
+            "1. Disolver acetato de Zn en metanol",
+            "2. Añadir NaOH en metanol",
+            "3. Calentar a 60°C por 2 horas",
+            "4. Centrifugar y lavar",
+            "5. Secar a 60°C"
+        ],
+        "equipment": ["Matraz", "Agitador", "Horno mufla", "Centrífuga"],
+        "precursors": ["Zn(NO₃)₂", "NaOH", "Acetato de Zn", "Metanol"],
+        "safety": ["Guantes", "Evitar inhalación de polvo"]
+    },
+    "Fe₂O₃ (Hematita)": {
+        "name": "Óxido de Hierro (Hematita α-Fe₂O₃)",
+        "ratio": "Fe:O = 2:3",
+        "melting_point": "1565°C",
+        "density": "5.26 g/cm³",
+        "applications": ["Pigmentos", "Catálisis", "Sensores magnéticos", "Electrodos"],
+        "synthesis": [
+            "MÉTODO DE PRECIPITACIÓN:",
+            "1. Disolver FeCl₃·6H₂O en agua (0.2M)",
+            "2. Añadir NH₄OH hasta pH 8-9",
+            "3. Envejecer precipitado 24 horas",
+            "4. Filtrar y lavar con agua caliente",
+            "5. Secar a 100°C",
+            "6. Calcinación: 500-700°C por 3 horas",
+            "",
+            "MÉTODO HIDROTERMAL:",
+            "1. Mezclar FeCl₃ y NaOH (relación 1:3)",
+            "2. Autoclave a 180°C por 12 horas",
+            "3. Lavar hasta pH neutro",
+            "4. Secar a 80°C"
+        ],
+        "equipment": ["Matraz", "Agitador", "Horno mufla", "Autoclave"],
+        "precursors": ["FeCl₃·6H₂O", "Fe(NO₃)₃", "NH₄OH", "NaOH"],
+        "safety": ["Manchas la piel", "Usar guantes"]
+    },
 }
 
-# Elementos compatibles para síntesis
-COMPATIBLE_ELEMENTS = {
-    "Ti": {"compatible": ["Al", "V", "Fe", "Ni", "O", "N", "C"], "conflict": ["Hg", "Pb"]},
-    "Al": {"compatible": ["Ti", "Cu", "Mg", "Si", "Zn", "O"], "conflict": ["Hg"]},
-    "Fe": {"compatible": ["Ni", "Cr", "Co", "Mn", "C", "O"], "conflict": ["Pb"]},
-    "Zn": {"compatible": ["Cu", "Al", "O", "S"], "conflict": []},
-    "Cu": {"compatible": ["Ni", "Zn", "Al", "Sn", "O"], "conflict": []},
-    "Ni": {"compatible": ["Fe", "Co", "Cu", "Cr", "Ti", "O"], "conflict": []},
-    "Co": {"compatible": ["Ni", "Fe", "Mn", "O"], "conflict": []},
-    "Mn": {"compatible": ["Fe", "Co", "O"], "conflict": []},
-    "Ag": {"compatible": ["Cu", "Au", "Pd", "O"], "conflict": ["S"]},
-    "Au": {"compatible": ["Ag", "Pt", "Pd", "Cu"], "conflict": []},
-    "Pt": {"compatible": ["Pd", "Au", "Rh", "Ir", "O"], "conflict": []},
-    "Pd": {"compatible": ["Pt", "Au", "Ag", "Ni", "O"], "conflict": []},
+# Elementos y compatibilidades
+ELEMENTS_DATABASE = {
+    "Ti": {"name": "Titanio", "atomic_num": 22, "mw": 47.867, "mp": 1668, "compatible": ["Al", "V", "Fe", "Ni", "O", "N", "C"]},
+    "Al": {"name": "Aluminio", "atomic_num": 13, "mw": 26.982, "mp": 660, "compatible": ["Ti", "Cu", "Mg", "Si", "Zn", "O"]},
+    "Fe": {"name": "Hierro", "atomic_num": 26, "mw": 55.845, "mp": 1538, "compatible": ["Ni", "Cr", "Co", "Mn", "C", "O"]},
+    "Zn": {"name": "Zinc", "atomic_num": 30, "mw": 65.38, "mp": 420, "compatible": ["Cu", "Al", "O", "S"]},
+    "Cu": {"name": "Cobre", "atomic_num": 29, "mw": 63.546, "mp": 1085, "compatible": ["Ni", "Zn", "Al", "Sn", "O"]},
+    "Ni": {"name": "Níquel", "atomic_num": 28, "mw": 58.693, "mp": 1455, "compatible": ["Fe", "Co", "Cu", "Cr", "Ti", "O"]},
+    "Co": {"name": "Cobalto", "atomic_num": 27, "mw": 58.933, "mp": 1495, "compatible": ["Ni", "Fe", "Mn", "O"]},
+    "Mn": {"name": "Manganeso", "atomic_num": 25, "mw": 54.938, "mp": 1246, "compatible": ["Fe", "Co", "O"]},
+    "Ag": {"name": "Plata", "atomic_num": 47, "mw": 107.868, "mp": 962, "compatible": ["Cu", "Au", "Pd", "O"]},
+    "Au": {"name": "Oro", "atomic_num": 79, "mw": 196.967, "mp": 1064, "compatible": ["Ag", "Pt", "Pd", "Cu"]},
+    "Pt": {"name": "Platino", "atomic_num": 78, "mw": 195.084, "mp": 1768, "compatible": ["Pd", "Au", "Rh", "Ir", "O"]},
+    "Pd": {"name": "Paladio", "atomic_num": 46, "mw": 106.42, "mp": 1555, "compatible": ["Pt", "Au", "Ag", "Ni", "O"]},
 }
 
-# Citas del libro "Lo demostrable e indemostrable" de Yu. I. Manin
+# Citas de Manin
 MANIN_QUOTES = [
     "La matemática es la parte más pura de la cultura humana, y sin embargo está profundamente conectada con la realidad física.",
     "La demostrabilidad es un concepto que trasciende la lógica formal: es la búsqueda de certeza en un universo de incertidumbre.",
     "Entre lo demostrable y lo indemostrable existe una zona fronteriza donde nace la creatividad científica.",
     "La física teórica y las matemáticas comparten un misterio común: ¿por qué sus abstracciones describen tan bien la realidad?",
     "La verdad matemática tiene un estatus ontológico único: existe independientemente de nuestra capacidad para demostrarla.",
-    "En el límite entre lo conocible y lo incognoscible, la ciencia encuentra su mayor impulso creativo.",
 ]
 
 # ============================================================================
-# CUSTOM CSS STYLES - DISEÑO PROFESIONAL
+# CUSTOM CSS - LETRAS CLARAS Y LEGIBLES
 # ============================================================================
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    * { font-family: 'Inter', sans-serif; }
-    
-    .main-header {
-        font-size: 2.8rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #1E88E5 0%, #7C4DFF 50%, #E91E63 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center;
-        margin-bottom: 0.3rem;
-        letter-spacing: -1px;
+    /* Fuente base */
+    html, body, [class*="css"] {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
     }
     
-    .sub-header {
-        font-size: 1.1rem;
-        color: #546E7A;
-        text-align: center;
-        margin-bottom: 1.5rem;
-        font-weight: 300;
+    /* Títulos principales */
+    h1 {
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+        color: #1565C0 !important;
+        text-align: center !important;
+        margin-bottom: 0.5rem !important;
     }
     
-    .pro-badge {
-        background: linear-gradient(135deg, #FFD700, #FFA000);
-        color: #000;
-        padding: 2px 10px;
+    h2 {
+        font-size: 1.8rem !important;
+        font-weight: 600 !important;
+        color: #1976D2 !important;
+        margin-top: 1.5rem !important;
+    }
+    
+    h3 {
+        font-size: 1.4rem !important;
+        font-weight: 600 !important;
+        color: #1E88E5 !important;
+    }
+    
+    h4 {
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+        color: #42A5F5 !important;
+    }
+    
+    /* Párrafos y texto */
+    p, div, span, label {
+        font-size: 15px !important;
+        color: #333333 !important;
+    }
+    
+    /* Métricas */
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        color: #1565C0 !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        font-size: 0.95rem !important;
+        font-weight: 500 !important;
+        color: #666666 !important;
+    }
+    
+    /* Cards */
+    .info-card {
+        background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+        padding: 1.5rem;
         border-radius: 12px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        margin-left: 8px;
-    }
-    
-    .metric-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        padding: 1.2rem;
-        border-radius: 12px;
-        border-left: 4px solid #1E88E5;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        transition: transform 0.2s;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-    }
-    
-    .success-box {
-        background: linear-gradient(135deg, #d4edda, #c3e6cb);
-        padding: 1.2rem;
-        border-radius: 12px;
-        border-left: 4px solid #28a745;
+        border-left: 5px solid #1976D2;
         margin: 1rem 0;
     }
     
-    .manin-quote {
-        background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+    .success-card {
+        background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
         padding: 1.5rem;
         border-radius: 12px;
-        border-left: 4px solid #FFA000;
-        margin: 1.5rem 0;
+        border-left: 5px solid #43A047;
+        margin: 1rem 0;
+    }
+    
+    .warning-card {
+        background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 5px solid #FFA000;
+        margin: 1rem 0;
+    }
+    
+    .quote-card {
+        background: linear-gradient(135deg, #FCE4EC 0%, #F8BBD0 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 5px solid #E91E63;
+        margin: 1rem 0;
         font-style: italic;
-        color: #5D4037;
     }
     
-    .manin-quote .author {
-        text-align: right;
-        font-weight: 600;
-        margin-top: 0.5rem;
-        color: #795548;
-    }
-    
-    .conclusion-box {
-        background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+    .production-card {
+        background: #FAFAFA;
         padding: 1.5rem;
         border-radius: 12px;
-        border: 2px solid #1E88E5;
-        margin: 1.5rem 0;
+        border: 2px solid #1976D2;
+        margin: 1rem 0;
     }
     
-    .alloy-card {
-        background: #f5f5f5;
+    .step-box {
+        background: #F5F5F5;
         padding: 1rem;
         border-radius: 8px;
         margin: 0.5rem 0;
-        border-left: 3px solid #7C4DFF;
+        border-left: 4px solid #42A5F5;
     }
     
-    .compatible-tag {
-        display: inline-block;
-        background: #E8F5E9;
-        color: #2E7D32;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        margin: 2px;
+    /* Tablas */
+    table {
+        font-size: 14px !important;
     }
     
-    .conflict-tag {
-        display: inline-block;
-        background: #FFEBEE;
-        color: #C62828;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        margin: 2px;
+    th {
+        background-color: #1976D2 !important;
+        color: white !important;
+        font-weight: 600 !important;
     }
     
-    .example-card {
-        background: white;
-        padding: 1rem;
-        border-radius: 12px;
-        border: 1px solid #e0e0e0;
-        margin: 0.5rem;
-        cursor: pointer;
-        transition: all 0.2s;
+    td {
+        padding: 10px !important;
     }
     
-    .example-card:hover {
-        border-color: #1E88E5;
-        box-shadow: 0 4px 12px rgba(30, 136, 229, 0.15);
+    /* Botones */
+    .stButton button {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        padding: 12px 24px !important;
     }
     
-    .stMetric label {
-        font-size: 0.85rem;
-        color: #666;
-        font-weight: 500;
+    /* Selectbox y inputs */
+    .stSelectbox label, .stTextInput label, .stNumberInput label {
+        font-size: 15px !important;
+        font-weight: 500 !important;
     }
     
-    .stMetric [data-testid="stMetricValue"] {
-        font-size: 1.5rem;
-        font-weight: 600;
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        font-size: 14px !important;
     }
     
-    /* Tabs styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2 {
+        font-size: 1.3rem !important;
     }
     
-    .stTabs [data-baseweb="tab"] {
-        padding: 12px 24px;
-        border-radius: 8px 8px 0 0;
-        font-weight: 500;
+    /* Expander */
+    .streamlit-expanderHeader {
+        font-size: 15px !important;
+        font-weight: 500 !important;
     }
     
-    /* Professional footer */
-    .pro-footer {
+    /* Código */
+    code {
+        font-family: 'Consolas', 'Monaco', monospace !important;
+        font-size: 13px !important;
+        background: #F5F5F5 !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+    }
+    
+    /* Footer */
+    .footer {
         text-align: center;
         padding: 2rem;
-        background: linear-gradient(135deg, #f8f9fa, #ffffff);
-        border-top: 1px solid #e0e0e0;
+        color: #666;
+        font-size: 14px;
+        border-top: 1px solid #E0E0E0;
         margin-top: 2rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================================================
-# PARSER PARA ANOMALY DETECTOR JSON
+# PARSER ANOMALY DETECTOR
 # ============================================================================
 
 def parse_anomaly_detector_json(raw_data: dict) -> dict:
     """Convierte JSON de Anomaly Detector al formato CosmicForge"""
     try:
         plugin_results = raw_data.get('plugin_results', {})
-        
         fractal_base = plugin_results.get('fractal_base', {})
         kolmogorov = plugin_results.get('kolmogorov_1941', {})
         lyapunov = plugin_results.get('lyapunov_stability', {})
@@ -409,778 +525,564 @@ def parse_anomaly_detector_json(raw_data: dict) -> dict:
         anisotropy_data = plugin_results.get('anisotropy', {})
         entropy_data = plugin_results.get('entropy', {})
         
-        astro_data = {
+        return {
             'object_name': raw_data.get('filename', 'Unknown').replace('.jpg', '').replace('.png', ''),
             'mode': raw_data.get('mode', 'balanced'),
             'global_score': raw_data.get('global_score', 0.5),
-            'fractal_dimension': fractal_base.get('d0', fractal_base.get('dimension_box', 1.5)),
+            'fractal_dimension': fractal_base.get('d0', 1.5),
             'criticality_score': renormalization.get('criticality_score', 0.5),
-            'entropy': entropy_data.get('normalized_entropy', entropy_data.get('shannon_entropy_bits', 0.01) / 8),
+            'entropy': entropy_data.get('normalized_entropy', 0.01),
             'anisotropy': anisotropy_data.get('anisotropy_index', 0.3),
             'turbulence_beta': kolmogorov.get('beta', 2.0),
             'lyapunov_max': lyapunov.get('max_lyapunov', -0.1),
-            'source': 'Anomaly Detector',
-            'plugin_results': plugin_results,
-            'report': raw_data.get('report', '')
+            'source': 'Anomaly Detector'
         }
-        
-        return astro_data
     except Exception as e:
-        st.error(f"Error parseando JSON: {e}")
+        st.error(f"Error: {e}")
         return None
+
+# ============================================================================
+# PDF GENERATOR - VERSIÓN MEJORADA
+# ============================================================================
+
+def create_pdf_report(astro_data, physical_props, recipe, production_guide):
+    """Crea PDF legible y bien formateado"""
+    
+    try:
+        from fpdf import FPDF
+        
+        class PDF(FPDF):
+            def header(self):
+                self.set_font('Arial', 'B', 12)
+                self.cell(0, 10, 'CosmicForge Lab - Informe Tecnico', 0, 1, 'C')
+                self.ln(5)
+            
+            def footer(self):
+                self.set_y(-15)
+                self.set_font('Arial', 'I', 8)
+                self.cell(0, 10, f'Pagina {self.page_no()}', 0, 0, 'C')
+        
+        pdf = PDF()
+        pdf.add_page()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        
+        # Título
+        pdf.set_font('Arial', 'B', 20)
+        pdf.cell(0, 15, 'COSMICFORGE LAB', 0, 1, 'C')
+        pdf.set_font('Arial', '', 12)
+        pdf.cell(0, 8, 'Informe de Diseno de Material', 0, 1, 'C')
+        pdf.ln(10)
+        
+        # Información general
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'INFORMACION GENERAL', 0, 1)
+        pdf.set_font('Arial', '', 11)
+        pdf.cell(0, 8, f"Objeto Astrofisico: {astro_data.get('object_name', 'Unknown')}", 0, 1)
+        pdf.cell(0, 8, f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 0, 1)
+        pdf.cell(0, 8, f"Material: {recipe.get('metal', 'Ti')}-O ({recipe.get('material_type', 'Oxido')})", 0, 1)
+        pdf.ln(5)
+        
+        # Propiedades
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'PROPIEDADES DEL MATERIAL', 0, 1)
+        pdf.set_font('Arial', '', 11)
+        
+        props = [
+            f"Porosidad: {physical_props.get('porosity', 0):.2%}",
+            f"Densidad: {physical_props.get('density', 0):.3f} g/cm3",
+            f"Conductividad Termica: {physical_props.get('thermal_conductivity', 0):.2f} W/mK",
+            f"Modulo Elastico: {physical_props.get('elastic_modulus', 0):.2f} GPa",
+            f"Area Superficial: {physical_props.get('surface_area', 0):.1f} m2/g",
+            f"Band Gap: {physical_props.get('band_gap', 0):.3f} eV",
+            f"Calidad: {physical_props.get('quality_score', 0):.1%}"
+        ]
+        
+        for prop in props:
+            pdf.cell(0, 7, f"  - {prop}", 0, 1)
+        pdf.ln(5)
+        
+        # Proceso de producción
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'PROCESO DE PRODUCCION', 0, 1)
+        pdf.set_font('Arial', '', 10)
+        
+        if production_guide:
+            for step in production_guide.get('synthesis', []):
+                if step.strip():
+                    # Limpiar caracteres especiales
+                    step_clean = step.encode('latin-1', 'replace').decode('latin-1')
+                    pdf.multi_cell(0, 6, f"  {step_clean}")
+        pdf.ln(5)
+        
+        # Equipamiento
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 8, 'Equipamiento Necesario:', 0, 1)
+        pdf.set_font('Arial', '', 10)
+        for eq in production_guide.get('equipment', []):
+            pdf.cell(0, 6, f"  - {eq}", 0, 1)
+        pdf.ln(3)
+        
+        # Precursores
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 8, 'Precursores:', 0, 1)
+        pdf.set_font('Arial', '', 10)
+        for prec in production_guide.get('precursors', []):
+            pdf.cell(0, 6, f"  - {prec}", 0, 1)
+        pdf.ln(3)
+        
+        # Seguridad
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 8, 'Seguridad:', 0, 1)
+        pdf.set_font('Arial', '', 10)
+        for safe in production_guide.get('safety', []):
+            pdf.cell(0, 6, f"  - {safe}", 0, 1)
+        
+        # Nueva página para conclusión
+        pdf.add_page()
+        
+        # Conclusión filosófica
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'REFLEXION CIENTIFICA', 0, 1)
+        
+        quote = MANIN_QUOTES[hash(astro_data.get('object_name', '')) % len(MANIN_QUOTES)]
+        pdf.set_font('Arial', 'I', 11)
+        pdf.multi_cell(0, 7, f'"{quote}"')
+        pdf.set_font('Arial', '', 10)
+        pdf.cell(0, 8, '- Yuri I. Manin, "Lo demostrable e indemostrable"', 0, 1, 'R')
+        pdf.ln(10)
+        
+        # Análisis
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 10, 'ANALISIS EPISTEMOLOGICO', 0, 1)
+        pdf.set_font('Arial', '', 10)
+        
+        analysis = f"""El material predicho a partir de {astro_data.get('object_name', 'este objeto astrofisico')} representa una hipotesis cientifica derivada de analogias matematicas entre estructuras cosmicas y propiedades materiales.
+
+Nivel de certeza matematica: {'Alto' if physical_props.get('quality_score', 0) > 0.6 else 'Moderado'} - Las ecuaciones estan formalmente derivadas.
+
+Nivel de certeza fisica: Requiere validacion - La traduccion astrofisica a material es una hipotesis por verificar experimentalmente.
+
+Proximos pasos recomendados:
+1. Simulacion DFT con VASP o Quantum ESPRESSO
+2. Validacion experimental de propiedades
+3. Comparacion con bases de datos (Materials Project, AFLOW)"""
+        
+        pdf.multi_cell(0, 6, analysis)
+        
+        # Footer
+        pdf.ln(20)
+        pdf.set_font('Arial', 'I', 9)
+        pdf.cell(0, 8, 'Generado por CosmicForge Lab', 0, 1, 'C')
+        
+        return pdf.output(dest='S').encode('latin-1')
+        
+    except Exception as e:
+        # Fallback: crear texto simple
+        report_text = f"""
+COSMICFORGE LAB - INFORME TECNICO
+================================
+
+Objeto Astrofisico: {astro_data.get('object_name', 'Unknown')}
+Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+Material: {recipe.get('metal', 'Ti')}-O
+
+PROPIEDADES:
+- Porosidad: {physical_props.get('porosity', 0):.2%}
+- Densidad: {physical_props.get('density', 0):.3f} g/cm3
+- Conductividad: {physical_props.get('thermal_conductivity', 0):.2f} W/mK
+- Modulo Elastico: {physical_props.get('elastic_modulus', 0):.2f} GPa
+
+PROCESO DE PRODUCCION:
+{chr(10).join(production_guide.get('synthesis', []))}
+
+EQUIPAMIENTO:
+{chr(10).join(['- ' + e for e in production_guide.get('equipment', [])])}
+
+SEGURIDAD:
+{chr(10).join(['- ' + s for s in production_guide.get('safety', [])])}
+
+---
+Generado por CosmicForge Lab
+"""
+        return report_text.encode('utf-8')
 
 # ============================================================================
 # VISUALIZACIÓN 3D
 # ============================================================================
 
-def create_3d_structure(porosity: float, density: float, metal: str = "Ti", n_atoms: int = 200) -> go.Figure:
-    """Crea visualización 3D interactiva de estructura cristalina"""
+def create_3d_structure(porosity, density, metal="Ti"):
     if not PLOTLY_AVAILABLE:
         return None
     
     np.random.seed(42)
-    
-    # Número de átomos basado en porosidad
-    n_metal = int(n_atoms * (1 - porosity) * 0.4)
-    n_oxygen = int(n_atoms * (1 - porosity) * 0.6)
-    
-    # Posiciones de átomos
-    metal_x = np.random.randn(n_metal) * 5
-    metal_y = np.random.randn(n_metal) * 5
-    metal_z = np.random.randn(n_metal) * 5
-    
-    oxygen_x = np.random.randn(n_oxygen) * 5
-    oxygen_y = np.random.randn(n_oxygen) * 5
-    oxygen_z = np.random.randn(n_oxygen) * 5
-    
-    # Crear figura
-    fig = go.Figure()
-    
-    # Átomos de metal
-    fig.add_trace(go.Scatter3d(
-        x=metal_x, y=metal_y, z=metal_z,
-        mode='markers',
-        marker=dict(
-            size=8,
-            color='#FF6B6B',
-            opacity=0.8,
-            line=dict(color='darkred', width=1)
-        ),
-        name=f'{metal} (Metal)',
-        hovertemplate=f'<b>{metal}</b><br>X: %{{x:.2f}}<br>Y: %{{y:.2f}}<br>Z: %{{z:.2f}}<extra></extra>'
-    ))
-    
-    # Átomos de oxígeno
-    fig.add_trace(go.Scatter3d(
-        x=oxygen_x, y=oxygen_y, z=oxygen_z,
-        mode='markers',
-        marker=dict(
-            size=5,
-            color='#4ECDC4',
-            opacity=0.7,
-            line=dict(color='darkcyan', width=1)
-        ),
-        name='O (Oxígeno)',
-        hovertemplate='<b>O</b><br>X: %{x:.2f}<br>Y: %{y:.2f}<br>Z: %{z:.2f}<extra></extra>'
-    ))
-    
-    # Actualizar layout
-    fig.update_layout(
-        title=dict(
-            text=f'Estructura Cristalina 3D - Porosidad: {porosity:.1%}',
-            font=dict(size=16, color='#333')
-        ),
-        scene=dict(
-            xaxis_title='X (Å)',
-            yaxis_title='Y (Å)',
-            zaxis_title='Z (Å)',
-            bgcolor='#fafafa',
-            camera=dict(
-                eye=dict(x=1.5, y=1.5, z=1.5)
-            )
-        ),
-        margin=dict(l=0, r=0, t=50, b=0),
-        legend=dict(
-            x=0.7,
-            y=0.9,
-            bgcolor='rgba(255,255,255,0.8)'
-        ),
-        height=500
-    )
-    
-    return fig
-
-
-def create_properties_radar(properties: dict) -> go.Figure:
-    """Crea gráfico radar de propiedades"""
-    if not PLOTLY_AVAILABLE:
-        return None
-    
-    categories = ['Densidad', 'Conductividad', 'Elasticidad', 'Área Superficial', 'Band Gap', 'Calidad']
-    
-    # Normalizar valores 0-1
-    values = [
-        min(properties.get('density', 2) / 5, 1),
-        min(properties.get('thermal_conductivity', 30) / 100, 1),
-        min(properties.get('elastic_modulus', 150) / 300, 1),
-        min(properties.get('surface_area', 100) / 500, 1),
-        min(properties.get('band_gap', 3) / 6, 1),
-        properties.get('quality_score', 0.5)
-    ]
+    n_atoms = int(200 * (1 - porosity))
+    n_metal = int(n_atoms * 0.4)
+    n_oxygen = n_atoms - n_metal
     
     fig = go.Figure()
     
-    fig.add_trace(go.Scatterpolar(
-        r=values + [values[0]],  # Cerrar el polígono
-        theta=categories + [categories[0]],
-        fill='toself',
-        name='Material',
-        line_color='#1E88E5',
-        fillcolor='rgba(30, 136, 229, 0.3)'
+    # Metal atoms
+    fig.add_trace(go.Scatter3d(
+        x=np.random.randn(n_metal) * 5,
+        y=np.random.randn(n_metal) * 5,
+        z=np.random.randn(n_metal) * 5,
+        mode='markers',
+        marker=dict(size=10, color='#E53935', opacity=0.8),
+        name=f'{metal} (Metal)'
+    ))
+    
+    # Oxygen atoms
+    fig.add_trace(go.Scatter3d(
+        x=np.random.randn(n_oxygen) * 5,
+        y=np.random.randn(n_oxygen) * 5,
+        z=np.random.randn(n_oxygen) * 5,
+        mode='markers',
+        marker=dict(size=6, color='#43A047', opacity=0.7),
+        name='O (Oxigeno)'
     ))
     
     fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 1]
-            ),
-            bgcolor='#fafafa'
-        ),
-        showlegend=False,
-        title='Perfil de Propiedades',
-        height=400
+        title=f'Estructura Cristalina 3D - Porosidad: {porosity:.1%}',
+        scene=dict(xaxis_title='X (A)', yaxis_title='Y (A)', zaxis_title='Z (A)'),
+        height=450
     )
     
     return fig
-
-# ============================================================================
-# GENERADOR DE PDF
-# ============================================================================
-
-def generate_pdf_report(astro_data: dict, physical_props: dict, recipe: dict) -> bytes:
-    """Genera reporte PDF profesional"""
-    if not PDF_AVAILABLE:
-        return None
-    
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    styles = getSampleStyleSheet()
-    
-    # Estilos personalizados
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        spaceAfter=30,
-        textColor=colors.HexColor('#1E88E5')
-    )
-    
-    heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
-        fontSize=14,
-        spaceAfter=12,
-        textColor=colors.HexColor('#37474F')
-    )
-    
-    body_style = ParagraphStyle(
-        'CustomBody',
-        parent=styles['Normal'],
-        fontSize=11,
-        spaceAfter=8,
-        textColor=colors.HexColor('#546E7A')
-    )
-    
-    quote_style = ParagraphStyle(
-        'Quote',
-        parent=styles['Normal'],
-        fontSize=10,
-        leftIndent=20,
-        rightIndent=20,
-        spaceAfter=12,
-        textColor=colors.HexColor('#795548'),
-        fontName='Helvetica-Oblique'
-    )
-    
-    elements = []
-    
-    # Título
-    elements.append(Paragraph("COSMICFORGE LAB", title_style))
-    elements.append(Paragraph("Scientific Report", styles['Heading2']))
-    elements.append(Spacer(1, 20))
-    
-    # Información del objeto
-    elements.append(Paragraph(f"Objeto Astrofísico: {astro_data.get('object_name', 'Unknown')}", heading_style))
-    elements.append(Paragraph(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}", body_style))
-    elements.append(Paragraph(f"Material: {recipe.get('metal_name', recipe.get('metal', 'N/A'))} {recipe.get('material_type', '')}", body_style))
-    elements.append(Spacer(1, 20))
-    
-    # Tabla de propiedades
-    elements.append(Paragraph("Propiedades del Material", heading_style))
-    
-    props_data = [
-        ['Propiedad', 'Valor'],
-        ['Porosidad', f"{physical_props.get('porosity', 0):.2%}"],
-        ['Densidad', f"{physical_props.get('density', 0):.3f} g/cm³"],
-        ['Conductividad Térmica', f"{physical_props.get('thermal_conductivity', 0):.2f} W/m·K"],
-        ['Módulo Elástico', f"{physical_props.get('elastic_modulus', 0):.2f} GPa"],
-        ['Área Superficial', f"{physical_props.get('surface_area', 0):.1f} m²/g"],
-        ['Band Gap', f"{physical_props.get('band_gap', 0):.3f} eV"],
-        ['Calidad', f"{physical_props.get('quality_score', 0):.1%}"]
-    ]
-    
-    table = Table(props_data, colWidths=[200, 200])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1E88E5')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f5f5f5')),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e0e0e0'))
-    ]))
-    
-    elements.append(table)
-    elements.append(Spacer(1, 30))
-    
-    # Conclusión filosófica (Manin)
-    elements.append(Paragraph("Reflexión Científica", heading_style))
-    
-    quote = MANIN_QUOTES[hash(astro_data.get('object_name', '')) % len(MANIN_QUOTES)]
-    elements.append(Paragraph(f'"{quote}"', quote_style))
-    elements.append(Paragraph("— Yuri I. Manin, 'Lo demostrable e indemostrable'", 
-                              ParagraphStyle('Author', parent=body_style, alignment=2, fontSize=9)))
-    elements.append(Spacer(1, 20))
-    
-    # Conclusión
-    elements.append(Paragraph("Conclusión", heading_style))
-    
-    quality = physical_props.get('quality_score', 0.5)
-    porosity = physical_props.get('porosity', 0.3)
-    
-    if quality > 0.7:
-        conclusion = f"El material predicho a partir de {astro_data.get('object_name', 'este objeto astrofísico')} presenta características excelentes para aplicaciones en {', '.join(recipe.get('applications', ['ciencia de materiales']))}. La combinación de porosidad ({porosity:.1%}) y propiedades mecánicas sugiere un material viable para síntesis experimental."
-    elif quality > 0.4:
-        conclusion = f"El material derivado de {astro_data.get('object_name', 'este objeto')} muestra propiedades moderadas que requieren optimización. Se recomienda ajustar parámetros de síntesis para mejorar la calidad del producto final."
-    else:
-        conclusion = f"La predicción para {astro_data.get('object_name', 'este objeto')} indica desafíos en la síntesis. Se sugiere explorar configuraciones alternativas o diferentes combinaciones de elementos."
-    
-    elements.append(Paragraph(conclusion, body_style))
-    elements.append(Spacer(1, 30))
-    
-    # Footer
-    elements.append(Paragraph("─" * 50, body_style))
-    elements.append(Paragraph("Generado por CosmicForge Lab Pro | www.cosmicforge-lab.com", 
-                              ParagraphStyle('Footer', parent=body_style, alignment=1, fontSize=8, textColor=colors.grey)))
-    
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer.getvalue()
-
-# ============================================================================
-# CONCLUSIÓN FILOSÓFICA (MANIN)
-# ============================================================================
-
-def generate_manin_conclusion(astro_data: dict, physical_props: dict, recipe: dict) -> str:
-    """Genera conclusión basada en la lógica de Manin"""
-    
-    quality = physical_props.get('quality_score', 0.5)
-    fractal_dim = astro_data.get('fractal_dimension', 1.5)
-    criticality = astro_data.get('criticality_score', 0.5)
-    object_name = astro_data.get('object_name', 'este objeto')
-    metal = recipe.get('metal', 'Ti')
-    
-    # Seleccionar cita apropiada
-    if criticality > 0.8:
-        quote = MANIN_QUOTES[2]  # Zona fronteriza
-    elif fractal_dim > 1.8:
-        quote = MANIN_QUOTES[0]  # Matemáticas y realidad
-    elif quality > 0.7:
-        quote = MANIN_QUOTES[3]  # Abstracciones y realidad
-    else:
-        quote = MANIN_QUOTES[4]  # Verdad matemática
-    
-    # Generar conclusión
-    conclusion = f"""
-    <div class="manin-quote">
-        <p><em>"{quote}"</em></p>
-        <p class="author">— Yuri I. Manin, "Lo demostrable e indemostrable"</p>
-    </div>
-    
-    <div class="conclusion-box">
-        <h4>🔍 Análisis Epistemológico</h4>
-        <p>La predicción del material <strong>{metal}-O</strong> a partir de <strong>{object_name}</strong> 
-        ejemplifica la tensión entre <em>lo demostrable</em> (las ecuaciones matemáticas que traducen 
-        firmas astrofísicas a propiedades materiales) y <em>lo indemostrable</em> (la validez física 
-        última de esta analogía).</p>
-        
-        <p><strong>Nivel de certeza matemática:</strong> {'✅ Alto' if quality > 0.6 else '🟡 Moderado'} 
-        — Las ecuaciones están formalmente derivadas.</p>
-        
-        <p><strong>Nivel de certeza física:</strong> 🟡 Requiere validación — La traducción 
-        astrofísica → material es una hipótesis por verificar.</p>
-        
-        <p><strong>Implicación filosófica:</strong> Este trabajo opera en la "zona fronteriza" 
-        que Manin identifica como el espacio creativo de la ciencia, donde las matemáticas 
-        puras encuentran su aplicación más profunda en la comprensión del universo material.</p>
-    </div>
-    """
-    
-    return conclusion
 
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
-def validate_astrophysical_data(data: dict):
-    """Validate astrophysical data structure"""
+def validate_astrophysical_data(data):
     errors = []
-    required_fields = ['fractal_dimension', 'criticality_score', 'entropy', 'anisotropy', 'turbulence_beta']
-    
-    for field in required_fields:
+    required = ['fractal_dimension', 'criticality_score', 'entropy', 'anisotropy', 'turbulence_beta']
+    for field in required:
         if field not in data:
-            errors.append(f"Campo requerido faltante: {field}")
-        elif not isinstance(data[field], (int, float)):
-            errors.append(f"Campo {field} debe ser numérico")
-    
-    is_valid = len(errors) == 0
-    return is_valid, errors
+            errors.append(f"Campo faltante: {field}")
+    return len(errors) == 0, errors
 
-def display_metrics_from_data(data: dict):
-    """Display astrophysical signature metrics"""
+def display_metrics(data):
     col1, col2, col3, col4 = st.columns(4)
-    
     with col1:
-        st.metric("Dimensión Fractal", f"{data.get('fractal_dimension', 0):.4f}")
+        st.metric("Dimension Fractal", f"{data.get('fractal_dimension', 0):.4f}")
         st.metric("Criticalidad", f"{data.get('criticality_score', 0):.4f}")
-    
     with col2:
-        st.metric("Entropía", f"{data.get('entropy', 0):.6f}")
-        st.metric("Anisotropía", f"{data.get('anisotropy', 0):.4f}")
-    
+        st.metric("Entropia", f"{data.get('entropy', 0):.6f}")
+        st.metric("Anisotropia", f"{data.get('anisotropy', 0):.4f}")
     with col3:
-        st.metric("Turbulencia β", f"{data.get('turbulence_beta', 0):.4f}")
+        st.metric("Turbulencia B", f"{data.get('turbulence_beta', 0):.4f}")
         st.metric("Lyapunov max", f"{data.get('lyapunov_max', 0):.6f}")
-    
     with col4:
-        st.metric("Objeto", str(data.get('object_name', 'Unknown'))[:18])
-        st.metric("Fuente", data.get('source', 'Manual'))
-
-def display_alloy_systems(metal: str):
-    """Muestra sistemas de aleaciones compatibles"""
-    if metal not in COMPATIBLE_ELEMENTS:
-        return
-    
-    compatible = COMPATIBLE_ELEMENTS[metal].get('compatible', [])
-    conflict = COMPATIBLE_ELEMENTS[metal].get('conflict', [])
-    
-    st.markdown("#### 🔗 Compatibilidad de Elementos")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("**✅ Elementos compatibles:**")
-        comp_html = "".join([f'<span class="compatible-tag">{e}</span>' for e in compatible])
-        st.markdown(comp_html, unsafe_allow_html=True)
-    
-    with col2:
-        if conflict:
-            st.markdown("**⚠️ Conflictos:**")
-            conf_html = "".join([f'<span class="conflict-tag">{e}</span>' for e in conflict])
-            st.markdown(conf_html, unsafe_allow_html=True)
-        else:
-            st.markdown("**✅ Sin conflictos conocidos**")
-    
-    # Aleaciones sugeridas
-    st.markdown("#### 🧪 Aleaciones Sugeridas")
-    alloys_found = []
-    for key, alloy in ALLOY_SYSTEMS.items():
-        if metal in key.split('-'):
-            alloys_found.append((key, alloy))
-    
-    if alloys_found:
-        for key, alloy in alloys_found[:4]:
-            st.markdown(f"""
-            <div class="alloy-card">
-                <strong>{alloy['name']}</strong> ({key})<br>
-                <small>Aplicaciones: {', '.join(alloy['applications'])}</small><br>
-                <small>Ratio: {alloy['ratio']}</small>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.info("No hay aleaciones predefinidas para este elemento.")
+        st.metric("Objeto", str(data.get('object_name', 'N/A'))[:15])
+        st.metric("Fuente", str(data.get('source', 'Manual'))[:10])
 
 # ============================================================================
 # MAIN APPLICATION
 # ============================================================================
 
 # Header
-st.markdown('<p class="main-header">🔬 CosmicForge Lab <span class="pro-badge">PRO</span></p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Diseño de Materiales Inspirado en Firmas Astrofísicas | Edición Profesional</p>', unsafe_allow_html=True)
+st.title("CosmicForge Lab")
+st.markdown("<p style='text-align:center; color:#666; font-size:18px;'>Diseno de Materiales Inspirado en Firmas Astrofisicas</p>", unsafe_allow_html=True)
 
-# =========================================================================
-# SIDEBAR - DATA INPUT
-# =========================================================================
+# Sidebar
+st.sidebar.header("Importar Datos")
 
-st.sidebar.header("📥 Importar Datos")
+input_method = st.sidebar.radio("Metodo:", ["Ejemplos Astrofisicos", "JSON Anomaly Detector", "Editor Manual"])
 
-input_method = st.sidebar.radio(
-    "Método de entrada:",
-    ["Ejemplos Astrofísicos", "JSON Anomaly Detector", "Editor Manual", "Archivos QE/CIF"]
-)
-
-if input_method == "Ejemplos Astrofísicos":
-    # Filtros
-    filter_type = st.sidebar.selectbox(
-        "Filtrar por tipo:",
-        ["Todos", "Nebulosas", "Galaxias", "Especiales"]
-    )
+if input_method == "Ejemplos Astrofisicos":
+    example = st.sidebar.selectbox("Selecciona:", list(ASTROPHYSICAL_EXAMPLES.keys()))
+    if st.sidebar.button("Cargar Ejemplo", type="primary"):
+        data = ASTROPHYSICAL_EXAMPLES[example].copy()
+        data['object_name'] = example
+        data['source'] = 'Base de Datos'
+        st.session_state.astro_data = data
+        st.sidebar.success(f"Cargado: {example}")
     
-    # Filtrar ejemplos
-    if filter_type == "Nebulosas":
-        filtered = {k: v for k, v in ASTROPHYSICAL_EXAMPLES.items() if "Nebula" in v.get("type", "")}
-    elif filter_type == "Galaxias":
-        filtered = {k: v for k, v in ASTROPHYSICAL_EXAMPLES.items() if "Galaxy" in v.get("type", "")}
-    elif filter_type == "Especiales":
-        filtered = {k: v for k, v in ASTROPHYSICAL_EXAMPLES.items() if "Nebula" not in v.get("type", "") and "Galaxy" not in v.get("type", "")}
-    else:
-        filtered = ASTROPHYSICAL_EXAMPLES
-    
-    example_choice = st.sidebar.selectbox("Selecciona objeto:", list(filtered.keys()))
-    
-    if st.sidebar.button("📋 Cargar ejemplo", type="primary"):
-        example_data = ASTROPHYSICAL_EXAMPLES[example_choice].copy()
-        example_data['object_name'] = example_choice
-        example_data['source'] = 'Database'
-        st.session_state.astro_data = example_data
-        st.sidebar.success(f"✅ {example_choice} cargado")
-    
-    # Mostrar info del ejemplo seleccionado
-    if example_choice in ASTROPHYSICAL_EXAMPLES:
-        ex = ASTROPHYSICAL_EXAMPLES[example_choice]
-        st.sidebar.markdown(f"""
-        **Tipo:** {ex.get('type', 'N/A')}  
-        **Distancia:** {ex.get('distance', 'N/A')}  
-        *{ex.get('description', '')}*
-        """)
+    if example in ASTROPHYSICAL_EXAMPLES:
+        ex = ASTROPHYSICAL_EXAMPLES[example]
+        st.sidebar.info(f"Tipo: {ex.get('type', 'N/A')}\nDistancia: {ex.get('distance', 'N/A')}")
 
 elif input_method == "JSON Anomaly Detector":
-    uploaded_file = st.sidebar.file_uploader("Archivo JSON", type=['json'])
-    
-    if uploaded_file is not None:
+    uploaded = st.sidebar.file_uploader("Archivo JSON", type=['json'])
+    if uploaded:
         try:
-            string_data = uploaded_file.read().decode('utf-8')
-            raw_json = json.loads(string_data)
-            st.session_state.raw_json = raw_json
-            
-            if 'plugin_results' in raw_json:
-                new_astro_data = parse_anomaly_detector_json(raw_json)
-                st.session_state.astro_data = new_astro_data
-                st.sidebar.success(f"✅ Anomaly Detector JSON cargado")
+            raw = json.loads(uploaded.read().decode('utf-8'))
+            if 'plugin_results' in raw:
+                st.session_state.astro_data = parse_anomaly_detector_json(raw)
+                st.sidebar.success("JSON Anomaly Detector cargado")
             else:
-                is_valid, errors = validate_astrophysical_data(raw_json)
+                is_valid, _ = validate_astrophysical_data(raw)
                 if is_valid:
-                    st.session_state.astro_data = raw_json
-                    st.sidebar.success("✅ JSON cargado")
-                else:
-                    st.sidebar.error("❌ Formato inválido")
+                    st.session_state.astro_data = raw
+                    st.sidebar.success("JSON cargado")
         except Exception as e:
-            st.sidebar.error(f"❌ Error: {e}")
+            st.sidebar.error(f"Error: {e}")
 
 elif input_method == "Editor Manual":
-    st.sidebar.subheader("Parámetros")
+    name = st.sidebar.text_input("Nombre", "Objeto Personalizado")
+    fd = st.sidebar.slider("Dimension Fractal", 0.0, 3.0, 1.5)
+    cs = st.sidebar.slider("Criticalidad", 0.0, 1.0, 0.5)
+    en = st.sidebar.number_input("Entropia", 0.0, 1.0, 0.01, format="%.6f")
+    an = st.sidebar.slider("Anisotropia", 0.0, 1.0, 0.3)
+    tb = st.sidebar.slider("Turbulencia", 0.0, 5.0, 2.0)
+    lm = st.sidebar.number_input("Lyapunov", -1.0, 1.0, -0.1)
     
-    object_name = st.sidebar.text_input("Nombre", "Custom Object")
-    fractal_dim = st.sidebar.slider("Dim. Fractal", 0.0, 3.0, 1.5, 0.001)
-    criticality = st.sidebar.slider("Criticalidad", 0.0, 1.0, 0.5, 0.01)
-    entropy = st.sidebar.number_input("Entropía", 0.0, 1.0, 0.01, 0.0001, format="%.6f")
-    anisotropy = st.sidebar.slider("Anisotropía", 0.0, 1.0, 0.3, 0.01)
-    turbulence = st.sidebar.slider("Turbulencia β", 0.0, 5.0, 2.0, 0.01)
-    lyapunov = st.sidebar.number_input("Lyapunov", -1.0, 1.0, -0.1, 0.001)
-    
-    if st.sidebar.button("✅ Aplicar", type="primary"):
+    if st.sidebar.button("Aplicar", type="primary"):
         st.session_state.astro_data = {
-            "object_name": object_name,
-            "fractal_dimension": fractal_dim,
-            "criticality_score": criticality,
-            "entropy": entropy,
-            "anisotropy": anisotropy,
-            "turbulence_beta": turbulence,
-            "lyapunov_max": lyapunov,
-            "mode": "custom",
-            "source": "Editor Manual"
+            'object_name': name, 'fractal_dimension': fd, 'criticality_score': cs,
+            'entropy': en, 'anisotropy': an, 'turbulence_beta': tb, 'lyapunov_max': lm,
+            'mode': 'custom', 'source': 'Editor'
         }
-        st.sidebar.success("✅ Parámetros aplicados")
+        st.sidebar.success("Parametros aplicados")
 
-elif input_method == "Archivos QE/CIF":
-    file_type = st.sidebar.selectbox("Tipo", ["Quantum ESPRESSO", "CIF", "LAMMPS"])
-    ext_map = {"Quantum ESPRESSO": ['in', 'pw'], "CIF": ['cif'], "LAMMPS": ['data', 'lmp']}
-    
-    uploaded_file = st.sidebar.file_uploader("Archivo", type=ext_map[file_type])
-    if uploaded_file:
-        try:
-            content = uploaded_file.read().decode('utf-8')
-            parser = FileParser()
-            
-            if file_type == "Quantum ESPRESSO":
-                st.session_state.astro_data = parser.parse_quantum_espresso(content)
-            elif file_type == "CIF":
-                st.session_state.astro_data = parser.parse_cif(content)
-            else:
-                st.session_state.astro_data = parser.parse_lammps_data(content)
-            st.sidebar.success(f"✅ {file_type} parseado")
-        except Exception as e:
-            st.sidebar.error(f"❌ Error: {e}")
+# Material selection
+st.sidebar.header("Configuracion del Material")
 
-# Botón limpiar
-if st.session_state.astro_data is not None:
-    if st.sidebar.button("🗑️ Limpiar"):
-        st.session_state.astro_data = None
-        st.session_state.physical_props = None
-        st.session_state.recipe = None
-        st.session_state.raw_json = None
-        st.rerun()
+material_type = st.sidebar.selectbox("Tipo:", ["Oxido", "Metal", "Ceramica", "Nanoparticula"])
+metal = st.sidebar.selectbox("Metal:", list(ELEMENTS_DATABASE.keys()))
 
-# =========================================================================
-# SIDEBAR - MATERIAL & ALLOY SYSTEM
-# =========================================================================
+# Aleación
+st.sidebar.subheader("Sistema de Aleacion")
+use_alloy = st.sidebar.checkbox("Usar aleacion predefinida")
 
-st.sidebar.header("⚗️ Material")
+selected_alloy_key = None
+if use_alloy:
+    alloy_options = [k for k in ALLOY_SYSTEMS.keys() if metal in k]
+    if alloy_options:
+        selected_alloy_key = st.sidebar.selectbox("Aleacion:", alloy_options)
+        if selected_alloy_key:
+            alloy_info = ALLOY_SYSTEMS[selected_alloy_key]
+            st.sidebar.info(f"{alloy_info['name']}\nRatio: {alloy_info['ratio']}\nMP: {alloy_info['melting_point']}")
 
-material_type = st.sidebar.selectbox("Tipo", ["Óxido", "Metal puro", "Cerámica", "Polímero", "Composite", "Nanopartícula"])
+# Limpiar
+if st.session_state.astro_data and st.sidebar.button("Limpiar Datos"):
+    st.session_state.astro_data = None
+    st.session_state.physical_props = None
+    st.session_state.recipe = None
+    st.rerun()
 
-metal = st.sidebar.selectbox("Metal base", list(COMPATIBLE_ELEMENTS.keys()))
-
-# Selector de aleación (si aplica)
-if material_type in ["Óxido", "Metal puro", "Nanopartícula"]:
-    use_alloy = st.sidebar.checkbox("🔧 Usar aleación")
-    
-    if use_alloy:
-        alloy_options = [k for k in ALLOY_SYSTEMS.keys() if metal in k.split('-')]
-        if alloy_options:
-            selected_alloy = st.sidebar.selectbox("Aleación", alloy_options)
-            st.sidebar.info(f"**{ALLOY_SYSTEMS[selected_alloy]['name']}**\n\nApps: {', '.join(ALLOY_SYSTEMS[selected_alloy]['applications'])}")
-
-with st.sidebar.expander("⚙️ Avanzado"):
-    bulk_density = st.number_input("Densidad (g/cm³)", value=3.0, min_value=0.1, max_value=20.0)
-    bulk_conductivity = st.number_input("Conductividad (W/m·K)", value=50.0, min_value=0.1, max_value=500.0)
-    bulk_elastic = st.number_input("Elasticidad (GPa)", value=200.0, min_value=1.0, max_value=1000.0)
-
-# =========================================================================
-# MAIN CONTENT
-# =========================================================================
-
-if st.session_state.astro_data is not None:
+# Main content
+if st.session_state.astro_data:
     astro_data = st.session_state.astro_data
     
-    st.header("🌌 Firma Astrofísica Detectada")
-    display_metrics_from_data(astro_data)
+    st.header("Firma Astrofisica Detectada")
+    display_metrics(astro_data)
     
-    # Mostrar compatibilidad de elementos
+    # Elementos compatibles
     st.markdown("---")
-    display_alloy_systems(metal)
+    st.subheader("Elementos Compatibles")
+    if metal in ELEMENTS_DATABASE:
+        compat = ELEMENTS_DATABASE[metal]['compatible']
+        st.write(f"**{ELEMENTS_DATABASE[metal]['name']}** es compatible con: **{', '.join(compat)}**")
     
-    # Botón generar
-    if st.button("🚀 Generar Receta de Material", type="primary", use_container_width=True):
-        with st.spinner("Calculando propiedades y generando análisis..."):
+    # Generar
+    if st.button("Generar Receta de Material", type="primary"):
+        with st.spinner("Calculando..."):
             try:
-                physics_calc = PhysicsCalculator(
-                    bulk_density=bulk_density,
-                    bulk_conductivity=bulk_conductivity,
-                    bulk_elastic=bulk_elastic
-                )
-                chem_engine = ChemistryEngine()
+                physics = PhysicsCalculator()
+                chem = ChemistryEngine()
                 
-                physical_props = physics_calc.calculate_all_properties(astro_data)
+                physical_props = physics.calculate_all_properties(astro_data)
+                recipe = chem.generate_complete_recipe(metal=metal, material_type=material_type.lower(), astrophysical_data=astro_data)
+                
                 st.session_state.physical_props = physical_props
-                
-                recipe = chem_engine.generate_complete_recipe(
-                    metal=metal,
-                    material_type=material_type.lower(),
-                    astrophysical_data=astro_data
-                )
                 st.session_state.recipe = recipe
-                
-                st.success("✅ Cálculos completados!")
+                st.success("Calculos completados!")
                 st.rerun()
             except Exception as e:
-                st.error(f"❌ Error: {e}")
-                st.exception(e)
+                st.error(f"Error: {e}")
 
-# =========================================================================
-# RESULTS
-# =========================================================================
-
-if st.session_state.physical_props is not None and st.session_state.recipe is not None:
-    physical_props = st.session_state.physical_props
-    recipe = st.session_state.recipe
-    astro_data = st.session_state.astro_data
+# Results
+if st.session_state.physical_props and st.session_state.recipe:
+    pp = st.session_state.physical_props
+    rc = st.session_state.recipe
+    ad = st.session_state.astro_data
     
-    file_gen = FileGenerator()
+    # Obtener guía de producción
+    production_guide = ALLOY_SYSTEMS.get(selected_alloy_key) if selected_alloy_key else None
     
-    tabs = st.tabs([
-        "📊 Propiedades", "⚗️ Síntesis", "🎯 3D Structure", "📈 Radar", 
-        "🔗 Aleaciones", "📁 Archivos", "📄 PDF", "💡 Conclusión"
-    ])
+    # Si no hay guía de aleación, crear guía genérica
+    if not production_guide:
+        production_guide = {
+            'name': f"{metal}-Oxido",
+            'synthesis': [
+                f"1. Preparar solucion de precursor de {metal} (0.5M) en agua desionizada",
+                "2. Ajustar pH con NaOH o NH4OH segun requerimientos",
+                f"3. Calentar a {int(rc.get('reaction_conditions', {}).get('temperature_C', 400))}C",
+                f"4. Mantener por {rc.get('reaction_conditions', {}).get('reaction_time_hours', 2):.1f} horas",
+                "5. Filtrar y lavar precipitado con agua/etanol",
+                "6. Secar a 100C por 12 horas",
+                "7. Calcinacion a 400-600C por 4 horas",
+                "8. Caracterizar por XRD, SEM, BET"
+            ],
+            'equipment': ["Matraz de reaccion", "Agitador magnetico", "Horno mufla", "Filtro", "Estufa de secado"],
+            'precursors': [f"Nitrato de {metal}", "NaOH", "Agua desionizada", "Etanol"],
+            'safety': ["Guantes y gafas", "Campana extractora", "Evitar inhalacion de polvos"]
+        }
+    
+    tabs = st.tabs(["Propiedades", "Sintesis", "Produccion Detallada", "Estructura 3D", "Archivos", "PDF", "Conclusion"])
     
     with tabs[0]:
         st.subheader("Propiedades del Material")
-        col1, col2, col3, col4 = st.columns(4)
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.metric("Porosidad", f"{pp.get('porosity', 0):.1%}")
+            st.metric("Densidad", f"{pp.get('density', 0):.3f} g/cm3")
+        with c2:
+            st.metric("Conductividad Termica", f"{pp.get('thermal_conductivity', 0):.2f} W/mK")
+            st.metric("Modulo Elastico", f"{pp.get('elastic_modulus', 0):.2f} GPa")
+        with c3:
+            st.metric("Area Superficial", f"{pp.get('surface_area', 0):.1f} m2/g")
+            st.metric("Band Gap", f"{pp.get('band_gap', 0):.3f} eV")
+        with c4:
+            st.metric("Calidad", f"{pp.get('quality_score', 0):.1%}")
+            st.metric("Energia Activacion", f"{pp.get('activation_energy', 0):.4f} eV")
         
-        with col1:
-            st.metric("Porosidad", f"{physical_props.get('porosity', 0):.1%}")
-            st.metric("Densidad", f"{physical_props.get('density', 0):.3f} g/cm³")
-        
-        with col2:
-            st.metric("Cond. Térmica", f"{physical_props.get('thermal_conductivity', 0):.2f} W/m·K")
-            st.metric("Módulo Elástico", f"{physical_props.get('elastic_modulus', 0):.2f} GPa")
-        
-        with col3:
-            st.metric("Área Superficial", f"{physical_props.get('surface_area', 0):.1f} m²/g")
-            st.metric("Band Gap", f"{physical_props.get('band_gap', 0):.3f} eV")
-        
-        with col4:
-            st.metric("Calidad", f"{physical_props.get('quality_score', 0):.1%}")
-            st.metric("E. Activación", f"{physical_props.get('activation_energy', 0):.4f} eV")
-        
-        # Materials Project Link
-        st.markdown("---")
-        st.markdown("### 🔗 Validación con Materials Project")
-        mp_formula = f"{recipe.get('metal', 'Ti')}O2"
+        # Materials Project links
+        st.markdown("### Validacion con Bases de Datos")
+        formula = f"{metal}O2"
         st.markdown(f"""
-        <div class="info-box">
-        <strong>Consulta tu material en bases de datos científicas:</strong><br><br>
-        • <a href="https://materialsproject.org/materials?search={mp_formula}" target="_blank">Materials Project - {mp_formula}</a><br>
-        • <a href="https://www.aflowlib.org/?search={mp_formula}" target="_blank">AFLOW Library</a><br>
-        • <a href="http://oqmd.org/materials?search={mp_formula}" target="_blank">OQMD Database</a><br>
-        • <a href="https://nomad-lab.eu/" target="_blank">NOMAD Archive</a>
+        <div class="info-card">
+        <strong>Consulta tu material:</strong><br>
+        - <a href="https://materialsproject.org/materials?search={formula}" target="_blank">Materials Project - {formula}</a><br>
+        - <a href="https://www.aflowlib.org/?search={formula}" target="_blank">AFLOW Library</a><br>
+        - <a href="http://oqmd.org/materials?search={formula}" target="_blank">OQMD Database</a>
         </div>
         """, unsafe_allow_html=True)
     
     with tabs[1]:
-        st.subheader("Receta de Síntesis")
-        conditions = recipe.get('reaction_conditions', {})
+        st.subheader("Receta de Sintesis")
+        cond = rc.get('reaction_conditions', {})
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### 🌡️ Condiciones")
-            st.write(f"**Temperatura:** {conditions.get('temperature_C', 0):.0f}°C")
-            st.write(f"**Tiempo:** {conditions.get('reaction_time_hours', 0):.2f} horas")
-            st.write(f"**pH:** {conditions.get('pH', 7):.1f}")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("#### Condiciones de Reaccion")
+            st.write(f"**Temperatura:** {cond.get('temperature_C', 0):.0f} C")
+            st.write(f"**Tiempo:** {cond.get('reaction_time_hours', 0):.2f} horas")
+            st.write(f"**pH:** {cond.get('pH', 7):.1f}")
         
-        with col2:
-            st.markdown("### 🧪 Precursores")
-            for precursor in recipe.get('precursors', []):
-                st.write(f"• {precursor}")
+        with c2:
+            st.markdown("#### Precursores")
+            for p in rc.get('precursors', []):
+                st.write(f"- {p}")
         
-        st.markdown("### 📝 Procedimiento")
-        for i, step in enumerate(recipe.get('step_by_step', []), 1):
+        st.markdown("#### Procedimiento General")
+        for i, step in enumerate(rc.get('step_by_step', []), 1):
             st.write(f"**{i}.** {step}")
     
     with tabs[2]:
-        st.subheader("Visualización 3D Interactiva")
-        if PLOTLY_AVAILABLE:
-            fig_3d = create_3d_structure(
-                physical_props.get('porosity', 0.3),
-                physical_props.get('density', 2.0),
-                recipe.get('metal', 'Ti')
-            )
-            if fig_3d:
-                st.plotly_chart(fig_3d, use_container_width=True)
-                st.info("🖱️ Arrastra para rotar | Scroll para zoom | Doble click para resetear")
-        else:
-            st.warning("Instala plotly: `pip install plotly`")
+        st.subheader("Guia de Produccion Detallada")
+        
+        if selected_alloy_key:
+            st.markdown(f"<div class='info-card'><h3>{production_guide['name']}</h3><p><strong>Ratio:</strong> {production_guide['ratio']} | <strong>Punto de Fusion:</strong> {production_guide['melting_point']} | <strong>Densidad:</strong> {production_guide['density']}</p></div>", unsafe_allow_html=True)
+        
+        st.markdown("#### Aplicaciones")
+        apps = production_guide.get('applications', ['Ciencia de materiales', 'Investigacion'])
+        for app in apps:
+            st.write(f"- {app}")
+        
+        st.markdown("#### Proceso de Sintesis Paso a Paso")
+        for step in production_guide.get('synthesis', []):
+            if step.strip():
+                st.markdown(f"<div class='step-box'>{step}</div>", unsafe_allow_html=True)
+        
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("#### Equipamiento")
+            for eq in production_guide.get('equipment', []):
+                st.write(f"- {eq}")
+        
+        with c2:
+            st.markdown("#### Precursores")
+            for prec in production_guide.get('precursors', []):
+                st.write(f"- {prec}")
+        
+        with c3:
+            st.markdown("#### Seguridad")
+            st.markdown("<div class='warning-card'>", unsafe_allow_html=True)
+            for safe in production_guide.get('safety', []):
+                st.write(f"- {safe}")
+            st.markdown("</div>", unsafe_allow_html=True)
     
     with tabs[3]:
-        st.subheader("Perfil de Propiedades")
+        st.subheader("Visualizacion 3D")
         if PLOTLY_AVAILABLE:
-            fig_radar = create_properties_radar(physical_props)
-            if fig_radar:
-                st.plotly_chart(fig_radar, use_container_width=True)
+            fig = create_3d_structure(pp.get('porosity', 0.3), pp.get('density', 2.0), metal)
+            if fig:
+                st.plotly_chart(fig, use_container_width=True)
+                st.info("Arrastra para rotar | Scroll para zoom")
+        else:
+            st.warning("Instala plotly: pip install plotly")
     
     with tabs[4]:
-        st.subheader("Sistema de Aleaciones")
-        display_alloy_systems(recipe.get('metal', 'Ti'))
+        st.subheader("Archivos para Simuladores")
+        fg = FileGenerator()
         
-        # Mostrar todas las aleaciones disponibles
-        st.markdown("### 📚 Base de Datos de Aleaciones")
-        for key, alloy in list(ALLOY_SYSTEMS.items())[:6]:
-            st.markdown(f"""
-            <div class="alloy-card">
-                <strong>{alloy['name']}</strong> ({key})<br>
-                <small>Ratio: {alloy['ratio']} | Apps: {', '.join(alloy['applications'])}</small>
-            </div>
-            """, unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            poscar = fg.generate_poscar(pp, rc, 'oxide')
+            st.download_button("POSCAR (VASP/QE)", poscar, "POSCAR.vasp", "text/plain")
+        with c2:
+            lammps = fg.generate_lammps_input(pp, rc, 'oxide')
+            st.download_button("LAMMPS", lammps, "input.lmp", "text/plain")
+        with c3:
+            csv = fg.generate_properties_csv(pp, rc)
+            st.download_button("CSV", csv, "properties.csv", "text/csv")
     
     with tabs[5]:
-        st.subheader("Archivos para Simuladores")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            poscar = file_gen.generate_poscar(physical_props, recipe, 'oxide')
-            st.download_button("⬇️ POSCAR (VASP/QE)", poscar, "POSCAR.vasp", "text/plain")
-        
-        with col2:
-            lammps = file_gen.generate_lammps_input(physical_props, recipe, 'oxide')
-            st.download_button("⬇️ LAMMPS", lammps, "input.lmp", "text/plain")
-        
-        with col3:
-            csv_data = file_gen.generate_properties_csv(physical_props, recipe)
-            st.download_button("⬇️ CSV", csv_data, "properties.csv", "text/csv")
-    
-    with tabs[6]:
         st.subheader("Generar Reporte PDF")
         
-        if st.button("📄 Generar PDF", type="primary"):
-            if PDF_AVAILABLE:
-                pdf_bytes = generate_pdf_report(astro_data, physical_props, recipe)
-                if pdf_bytes:
-                    st.download_button(
-                        "⬇️ Descargar PDF",
-                        pdf_bytes,
-                        f"CosmicForge_Report_{astro_data.get('object_name', 'material')}.pdf",
-                        "application/pdf"
-                    )
+        if st.button("Crear PDF", type="primary"):
+            pdf_bytes = create_pdf_report(ad, pp, rc, production_guide)
+            
+            if isinstance(pdf_bytes, bytes):
+                st.download_button(
+                    "Descargar PDF",
+                    pdf_bytes,
+                    f"CosmicForge_{ad.get('object_name', 'material')}.pdf",
+                    "application/pdf"
+                )
             else:
-                st.warning("Instala reportlab: `pip install reportlab`")
-                st.info("El PDF incluye: propiedades, conclusión filosófica (Manin), y análisis epistemológico.")
+                st.download_button(
+                    "Descargar TXT (fallback)",
+                    pdf_bytes,
+                    f"CosmicForge_{ad.get('object_name', 'material')}.txt",
+                    "text/plain"
+                )
     
-    with tabs[7]:
-        st.subheader("💡 Conclusión Científica")
-        st.markdown(generate_manin_conclusion(astro_data, physical_props, recipe), unsafe_allow_html=True)
+    with tabs[6]:
+        st.subheader("Conclusion Cientifica")
+        
+        quote = MANIN_QUOTES[hash(ad.get('object_name', '')) % len(MANIN_QUOTES)]
+        st.markdown(f"""
+        <div class="quote-card">
+        <em>"{quote}"</em><br><br>
+        <strong>- Yuri I. Manin, "Lo demostrable e indemostrable"</strong>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        quality = pp.get('quality_score', 0.5)
+        st.markdown(f"""
+        <div class="production-card">
+        <h4>Analisis Epistemologico</h4>
+        <p>La prediccion del material <strong>{metal}-O</strong> a partir de <strong>{ad.get('object_name', 'este objeto')}</strong> 
+        ejemplifica la tension entre lo demostrable (las ecuaciones matematicas) y lo indemostrable (la validez fisica ultima).</p>
+        
+        <p><strong>Nivel de certeza matematica:</strong> {'Alto' if quality > 0.6 else 'Moderado'} - Ecuaciones formalmente derivadas.</p>
+        <p><strong>Nivel de certeza fisica:</strong> Requiere validacion experimental.</p>
+        
+        <h4>Proximos Pasos:</h4>
+        <ol>
+        <li>Simulacion DFT con VASP o Quantum ESPRESSO</li>
+        <li>Validacion experimental en laboratorio</li>
+        <li>Comparacion con Materials Project</li>
+        </ol>
+        </div>
+        """, unsafe_allow_html=True)
 
 else:
-    st.info("👈 Selecciona un ejemplo astrofísico o carga un archivo JSON para comenzar")
-    
-    # Mostrar galería de ejemplos
-    st.markdown("### 🌌 Galería de Objetos Astrofísicos")
-    
-    cols = st.columns(3)
-    examples_list = list(ASTROPHYSICAL_EXAMPLES.items())
-    
-    for i, (name, data) in enumerate(examples_list[:9]):
-        with cols[i % 3]:
-            st.markdown(f"""
-            <div class="example-card">
-                <strong>{name}</strong><br>
-                <small>{data.get('type', 'N/A')}</small><br>
-                <small>Distancia: {data.get('distance', 'N/A')}</small>
-            </div>
-            """, unsafe_allow_html=True)
+    st.info("Carga un ejemplo o archivo JSON para comenzar")
 
 # Footer
 st.markdown("---")
-st.markdown("""
-<div class="pro-footer">
-    <p><strong>CosmicForge Lab Pro v3.0</strong></p>
-    <p>Diseño de Materiales Inspirado en Firmas Astrofísicas</p>
-    <p>
-        🔗 <a href="https://github.com/WilmerGaspar/cosmicforge-lab" target="_blank">GitHub</a> | 
-        📧 Contacto | 
-        📄 <a href="https://materialsproject.org" target="_blank">Materials Project</a>
-    </p>
-    <p><small>© 2025 CosmicForge Lab | Edición Profesional</small></p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<div class='footer'>CosmicForge Lab v3.1 | Edicion Personal</div>", unsafe_allow_html=True)
