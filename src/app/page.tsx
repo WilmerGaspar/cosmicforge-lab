@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -11,83 +11,130 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Progress } from '@/components/ui/progress'
+import { Switch } from '@/components/ui/switch'
 import { 
   Sparkles, FlaskConical, Atom, FileText, Download, Database, 
   Thermometer, Gauge, Beaker, Shield, AlertTriangle, CheckCircle2,
-  ExternalLink, Loader2, Settings, BookOpen
+  ExternalLink, Loader2, Settings, BookOpen, Satellite, Radiation,
+  Sun, Moon, Zap, Activity, BarChart3, Radar, RefreshCw, Play,
+  Cloud, Cpu, LineChart, Target, Trophy, Star, TrendingUp
 } from 'lucide-react'
 
-// Astrophysical Examples Database
+// Astrophysical Examples Database (Extended)
 const ASTROPHYSICAL_EXAMPLES = {
   "Orion Nebula M42": {
     fractal_dimension: 1.654, criticality_score: 0.722, entropy: 0.019,
     anisotropy: 0.329, turbulence_beta: 2.278, lyapunov_max: -0.227,
-    mode: "balanced", type: "Nebulosa de Emisión", distance: "1,344 ly"
+    mode: "balanced", type: "Nebulosa de Emisión", distance: "1,344 ly",
+    temperature: "10,000 K", luminosity: "10^5 L☉"
   },
   "Crab Nebula M1": {
     fractal_dimension: 1.82, criticality_score: 0.89, entropy: 0.032,
     anisotropy: 0.456, turbulence_beta: 2.45, lyapunov_max: -0.15,
-    mode: "turbulent", type: "Remanente Supernova", distance: "6,500 ly"
+    mode: "turbulent", type: "Remanente Supernova", distance: "6,500 ly",
+    temperature: "1,600 K", luminosity: "10^5 L☉"
   },
   "Ring Nebula M57": {
     fractal_dimension: 1.45, criticality_score: 0.55, entropy: 0.012,
     anisotropy: 0.28, turbulence_beta: 1.95, lyapunov_max: -0.35,
-    mode: "stable", type: "Nebulosa Planetaria", distance: "2,283 ly"
+    mode: "stable", type: "Nebulosa Planetaria", distance: "2,283 ly",
+    temperature: "125,000 K", luminosity: "200 L☉"
   },
   "Triangulum Galaxy M33": {
     fractal_dimension: 1.93, criticality_score: 0.78, entropy: 0.00000964,
     anisotropy: 0.23, turbulence_beta: 1.84, lyapunov_max: 0.11,
-    mode: "balanced", type: "Galaxia Espiral", distance: "2.73M ly"
+    mode: "balanced", type: "Galaxia Espiral", distance: "2.73M ly",
+    temperature: "10 K", luminosity: "3×10^9 L☉"
   },
   "Andromeda Galaxy M31": {
     fractal_dimension: 1.88, criticality_score: 0.85, entropy: 0.000012,
     anisotropy: 0.19, turbulence_beta: 1.92, lyapunov_max: 0.08,
-    mode: "balanced", type: "Galaxia Espiral", distance: "2.537M ly"
+    mode: "balanced", type: "Galaxia Espiral", distance: "2.537M ly",
+    temperature: "10 K", luminosity: "2.6×10^10 L☉"
   },
   "Eagle Nebula M16": {
     fractal_dimension: 1.78, criticality_score: 0.81, entropy: 0.028,
     anisotropy: 0.42, turbulence_beta: 2.35, lyapunov_max: -0.18,
-    mode: "turbulent", type: "Nebulosa de Emisión", distance: "7,000 ly"
+    mode: "turbulent", type: "Nebulosa de Emisión", distance: "7,000 ly",
+    temperature: "8,000 K", luminosity: "10^6 L☉"
   },
   "Tarantula Nebula": {
     fractal_dimension: 1.91, criticality_score: 0.93, entropy: 0.045,
     anisotropy: 0.58, turbulence_beta: 2.68, lyapunov_max: 0.15,
-    mode: "turbulent", type: "Región HII", distance: "160,000 ly"
+    mode: "turbulent", type: "Región HII", distance: "160,000 ly",
+    temperature: "15,000 K", luminosity: "10^7 L☉"
   },
   "Pillars of Creation": {
     fractal_dimension: 1.85, criticality_score: 0.88, entropy: 0.035,
     anisotropy: 0.52, turbulence_beta: 2.55, lyapunov_max: -0.12,
-    mode: "turbulent", type: "Nube Molecular", distance: "6,500 ly"
+    mode: "turbulent", type: "Nube Molecular", distance: "6,500 ly",
+    temperature: "10 K", luminosity: "N/A"
   },
   "Whirlpool Galaxy M51": {
     fractal_dimension: 1.95, criticality_score: 0.91, entropy: 0.000015,
     anisotropy: 0.22, turbulence_beta: 1.98, lyapunov_max: 0.12,
-    mode: "turbulent", type: "Galaxia Interactuante", distance: "23M ly"
+    mode: "turbulent", type: "Galaxia Interactuante", distance: "23M ly",
+    temperature: "10 K", luminosity: "10^10 L☉"
   },
   "Helix Nebula NGC 7293": {
     fractal_dimension: 1.48, criticality_score: 0.58, entropy: 0.011,
     anisotropy: 0.31, turbulence_beta: 2.02, lyapunov_max: -0.32,
-    mode: "stable", type: "Nebulosa Planetaria", distance: "655 ly"
+    mode: "stable", type: "Nebulosa Planetaria", distance: "655 ly",
+    temperature: "100,000 K", luminosity: "100 L☉"
+  },
+  "Betelgeuse": {
+    fractal_dimension: 1.72, criticality_score: 0.95, entropy: 0.055,
+    anisotropy: 0.65, turbulence_beta: 2.85, lyapunov_max: 0.25,
+    mode: "turbulent", type: "Supergigante Roja", distance: "700 ly",
+    temperature: "3,500 K", luminosity: "1.2×10^5 L☉"
+  },
+  "Sirius Binary System": {
+    fractal_dimension: 1.55, criticality_score: 0.62, entropy: 0.015,
+    anisotropy: 0.38, turbulence_beta: 2.15, lyapunov_max: -0.08,
+    mode: "balanced", type: "Sistema Binario", distance: "8.6 ly",
+    temperature: "9,940 K", luminosity: "25.4 L☉"
+  },
+  "Jupiter Great Red Spot": {
+    fractal_dimension: 1.68, criticality_score: 0.75, entropy: 0.022,
+    anisotropy: 0.42, turbulence_beta: 2.32, lyapunov_max: -0.05,
+    mode: "balanced", type: "Tormenta Atmosférica", distance: "4.2 AU",
+    temperature: "110 K", luminosity: "N/A"
+  },
+  "Saturn Rings": {
+    fractal_dimension: 1.92, criticality_score: 0.68, entropy: 0.008,
+    anisotropy: 0.15, turbulence_beta: 1.45, lyapunov_max: -0.42,
+    mode: "stable", type: "Sistema de Anillos", distance: "9.5 AU",
+    temperature: "90 K", luminosity: "N/A"
+  },
+  "Vela Supernova Remnant": {
+    fractal_dimension: 1.79, criticality_score: 0.87, entropy: 0.038,
+    anisotropy: 0.48, turbulence_beta: 2.52, lyapunov_max: 0.08,
+    mode: "turbulent", type: "Remanente Supernova", distance: "936 ly",
+    temperature: "800 K", luminosity: "10^4 L☉"
   }
 }
 
-// Elements Database
-const ELEMENTS_DATABASE: Record<string, { name: string; atomic_num: number; mw: number; mp: number; compatible: string[] }> = {
-  "Ti": { name: "Titanio", atomic_num: 22, mw: 47.867, mp: 1668, compatible: ["Al", "V", "Fe", "Ni", "O", "N", "C"] },
-  "Al": { name: "Aluminio", atomic_num: 13, mw: 26.982, mp: 660, compatible: ["Ti", "Cu", "Mg", "Si", "Zn", "O"] },
-  "Fe": { name: "Hierro", atomic_num: 26, mw: 55.845, mp: 1538, compatible: ["Ni", "Cr", "Co", "Mn", "C", "O"] },
-  "Zn": { name: "Zinc", atomic_num: 30, mw: 65.38, mp: 420, compatible: ["Cu", "Al", "O", "S"] },
-  "Cu": { name: "Cobre", atomic_num: 29, mw: 63.546, mp: 1085, compatible: ["Ni", "Zn", "Al", "Sn", "O"] },
-  "Ni": { name: "Níquel", atomic_num: 28, mw: 58.693, mp: 1455, compatible: ["Fe", "Co", "Cu", "Cr", "Ti", "O"] },
-  "Co": { name: "Cobalto", atomic_num: 27, mw: 58.933, mp: 1495, compatible: ["Ni", "Fe", "Mn", "O"] },
-  "Mn": { name: "Manganeso", atomic_num: 25, mw: 54.938, mp: 1246, compatible: ["Fe", "Co", "O"] },
-  "Ag": { name: "Plata", atomic_num: 47, mw: 107.868, mp: 962, compatible: ["Cu", "Au", "Pd", "O"] },
-  "Au": { name: "Oro", atomic_num: 79, mw: 196.967, mp: 1064, compatible: ["Ag", "Pt", "Pd", "Cu"] },
-  "Pt": { name: "Platino", atomic_num: 78, mw: 195.084, mp: 1768, compatible: ["Pd", "Au", "Rh", "Ir", "O"] },
-  "Pd": { name: "Paladio", atomic_num: 46, mw: 106.42, mp: 1555, compatible: ["Pt", "Au", "Ag", "Ni", "O"] }
+// Elements Database (Extended)
+const ELEMENTS_DATABASE: Record<string, { name: string; atomic_num: number; mw: number; mp: number; bp: number; density: number; compatible: string[]; category: string }> = {
+  "Ti": { name: "Titanio", atomic_num: 22, mw: 47.867, mp: 1668, bp: 3287, density: 4.506, compatible: ["Al", "V", "Fe", "Ni", "O", "N", "C"], category: "transition" },
+  "Al": { name: "Aluminio", atomic_num: 13, mw: 26.982, mp: 660, bp: 2519, density: 2.70, compatible: ["Ti", "Cu", "Mg", "Si", "Zn", "O"], category: "post-transition" },
+  "Fe": { name: "Hierro", atomic_num: 26, mw: 55.845, mp: 1538, bp: 2862, density: 7.874, compatible: ["Ni", "Cr", "Co", "Mn", "C", "O"], category: "transition" },
+  "Zn": { name: "Zinc", atomic_num: 30, mw: 65.38, mp: 420, bp: 907, density: 7.14, compatible: ["Cu", "Al", "O", "S"], category: "transition" },
+  "Cu": { name: "Cobre", atomic_num: 29, mw: 63.546, mp: 1085, bp: 2562, density: 8.96, compatible: ["Ni", "Zn", "Al", "Sn", "O"], category: "transition" },
+  "Ni": { name: "Níquel", atomic_num: 28, mw: 58.693, mp: 1455, bp: 2913, density: 8.91, compatible: ["Fe", "Co", "Cu", "Cr", "Ti", "O"], category: "transition" },
+  "Co": { name: "Cobalto", atomic_num: 27, mw: 58.933, mp: 1495, bp: 2927, density: 8.86, compatible: ["Ni", "Fe", "Mn", "O"], category: "transition" },
+  "Mn": { name: "Manganeso", atomic_num: 25, mw: 54.938, mp: 1246, bp: 2061, density: 7.47, compatible: ["Fe", "Co", "O"], category: "transition" },
+  "Ag": { name: "Plata", atomic_num: 47, mw: 107.868, mp: 962, bp: 2162, density: 10.49, compatible: ["Cu", "Au", "Pd", "O"], category: "transition" },
+  "Au": { name: "Oro", atomic_num: 79, mw: 196.967, mp: 1064, bp: 2856, density: 19.30, compatible: ["Ag", "Pt", "Pd", "Cu"], category: "transition" },
+  "Pt": { name: "Platino", atomic_num: 78, mw: 195.084, mp: 1768, bp: 3825, density: 21.45, compatible: ["Pd", "Au", "Rh", "Ir", "O"], category: "transition" },
+  "Pd": { name: "Paladio", atomic_num: 46, mw: 106.42, mp: 1555, bp: 2963, density: 12.02, compatible: ["Pt", "Au", "Ag", "Ni", "O"], category: "transition" },
+  "Cr": { name: "Cromo", atomic_num: 24, mw: 52.00, mp: 1907, bp: 2671, density: 7.19, compatible: ["Fe", "Ni", "Co", "O"], category: "transition" },
+  "Mo": { name: "Molibdeno", atomic_num: 42, mw: 95.95, mp: 2623, bp: 4639, density: 10.28, compatible: ["Ti", "Fe", "Ni", "Cr", "O"], category: "transition" },
+  "W": { name: "Wolframio", atomic_num: 74, mw: 183.84, mp: 3422, bp: 5930, density: 19.25, compatible: ["Ti", "Mo", "Cr", "O"], category: "transition" }
 }
 
-// Alloy Systems Database
+// Alloy Systems Database (Extended)
 const ALLOY_SYSTEMS: Record<string, {
   name: string;
   ratio: string;
@@ -98,6 +145,8 @@ const ALLOY_SYSTEMS: Record<string, {
   equipment: string[];
   precursors: string[];
   safety: string[];
+  commercial_name?: string;
+  category: string;
 }> = {
   "Ti-Al": {
     name: "Titanio-Aluminio (Gamma-TiAl)",
@@ -115,7 +164,9 @@ const ALLOY_SYSTEMS: Record<string, {
     ],
     equipment: ["Horno de arco eléctrico", "Atmósfera de argón", "Crisol de grafito", "Horno de tratamiento térmico"],
     precursors: ["Ti esponja (99.9%)", "Al lingote (99.99%)"],
-    safety: ["Usar guantes refractarios", "Atmósfera inerte obligatoria", "Ventilación adecuada"]
+    safety: ["Usar guantes refractarios", "Atmósfera inerte obligatoria", "Ventilación adecuada"],
+    commercial_name: "Gamma-Met",
+    category: "intermetallic"
   },
   "Ti-Al-V (TA6V)": {
     name: "Titanio TA6V (Ti-6Al-4V)",
@@ -134,7 +185,9 @@ const ALLOY_SYSTEMS: Record<string, {
     ],
     equipment: ["Horno de arco bajo vacío", "Crisol de cobre refrigerado", "Prensa de forja", "Horno de tratamiento"],
     precursors: ["Ti esponja grado aeronáutico", "Al lingote", "V metálico"],
-    safety: ["Vacío alto (<10⁻³ mbar)", "Protección radiación UV", "Evitar contaminación con O₂, N₂, H₂"]
+    safety: ["Vacío alto (<10⁻³ mbar)", "Protección radiación UV", "Evitar contaminación con O₂, N₂, H₂"],
+    commercial_name: "Ti-6Al-4V / Grade 5",
+    category: "aerospace"
   },
   "Fe-Ni (Invar)": {
     name: "Invar (Fe-36Ni)",
@@ -153,7 +206,9 @@ const ALLOY_SYSTEMS: Record<string, {
     ],
     equipment: ["Horno de inducción", "Atmósfera inerte", "Laminador", "Horno de recocido"],
     precursors: ["Fe electrolítico", "Ni electrolítico (99.9%)"],
-    safety: ["Evitar oxidación", "Controlar temperatura exacta"]
+    safety: ["Evitar oxidación", "Controlar temperatura exacta"],
+    commercial_name: "Invar 36",
+    category: "precision"
   },
   "Cu-Ni (Cuproníquel)": {
     name: "Cuproníquel 70/30",
@@ -171,7 +226,9 @@ const ALLOY_SYSTEMS: Record<string, {
     ],
     equipment: ["Horno de inducción", "Fundente bórax", "Laminador"],
     precursors: ["Cu cátodo (99.99%)", "Ni electrolítico"],
-    safety: ["Fundente para evitar oxidación", "Ventilación"]
+    safety: ["Fundente para evitar oxidación", "Ventilación"],
+    commercial_name: "C70600 / CuNi 70/30",
+    category: "marine"
   },
   "Al-Cu (Duraluminio)": {
     name: "Duraluminio 2024",
@@ -189,7 +246,9 @@ const ALLOY_SYSTEMS: Record<string, {
     ],
     equipment: ["Horno de resistencia", "Crisol grafito", "Molde metálico", "Horno de tratamiento"],
     precursors: ["Al primario", "Cu electrolítico", "Mg lingote", "Mn metálico"],
-    safety: ["Evitar humedad (explosión)", "Degaseado obligatorio"]
+    safety: ["Evitar humedad (explosión)", "Degaseado obligatorio"],
+    commercial_name: "AA2024-T6",
+    category: "aerospace"
   },
   "TiO2 (Titania)": {
     name: "Óxido de Titanio (TiO₂)",
@@ -204,60 +263,64 @@ const ALLOY_SYSTEMS: Record<string, {
       "3. Ajustar pH a 2 con HNO₃",
       "4. Envejecer gel 24 horas",
       "5. Secar a 100°C por 12 horas",
-      "6. Calcinación: 400°C (anatasa) o 800°C (rutilo)",
-      "",
-      "MÉTODO HIDROTERMAL:",
-      "1. Mezclar TiCl₄ con NaOH 10M",
-      "2. Transferir a autoclave",
-      "3. Calentar a 180°C por 12 horas",
-      "4. Lavar con agua hasta pH neutro",
-      "5. Secar a 80°C"
+      "6. Calcinación: 400°C (anatasa) o 800°C (rutilo)"
     ],
     equipment: ["Matraz reacción", "Agitador magnético", "Horno mufla", "Autoclave (opcional)"],
     precursors: ["Isopropóxido de Ti", "TiCl₄", "Etanol", "HNO₃"],
-    safety: ["Guantes y gafas", "Campana extractora", "TiCl₄ es corrosivo"]
+    safety: ["Guantes y gafas", "Campana extractora", "TiCl₄ es corrosivo"],
+    category: "ceramic"
   },
-  "ZnO (Óxido de Zinc)": {
-    name: "Óxido de Zinc (ZnO)",
-    ratio: "Zn:O = 1:1",
-    melting_point: "1975°C",
-    density: "5.61 g/cm³",
-    applications: ["Protectores solares", "Sensores de gas", "Varistores", "Catalizadores"],
+  "Ni-Ti (Nitinol)": {
+    name: "Nitinol (NiTi - Memoria de Forma)",
+    ratio: "Ni:Ti = 50:50",
+    melting_point: "1310°C",
+    density: "6.45 g/cm³",
+    applications: ["Stents cardiovasculares", "Actuadores", "Implantes médicos", "Aparatos ortodónticos"],
     synthesis: [
-      "MÉTODO DE PRECIPITACIÓN:",
-      "1. Disolver Zn(NO₃)₂ en agua desionizada (0.5M)",
-      "2. Preparar solución NaOH 1M",
-      "3. Añadir NaOH gota a gota con agitación vigorosa",
-      "4. Mantener pH 10-11",
-      "5. Envejecer precipitado 2 horas",
-      "6. Filtrar y lavar con agua/etanol",
-      "7. Secar a 80°C por 12 horas",
-      "8. Calcinación: 400-600°C por 4 horas"
+      "1. Fundir Ni y Ti en horno de arco bajo argón",
+      "2. Voltear lingote 5-6 veces para homogeneizar",
+      "3. Forjar a 850°C",
+      "4. Recocer a 500°C para ajustar temperatura de transición",
+      "5. Enfriar en agua para fijar estructura",
+      "6. Tratamiento térmico final para ajustar Af"
     ],
-    equipment: ["Matraz", "Agitador", "Horno mufla", "Centrífuga"],
-    precursors: ["Zn(NO₃)₂", "NaOH", "Acetato de Zn", "Metanol"],
-    safety: ["Guantes", "Evitar inhalación de polvo"]
+    equipment: ["Horno de arco", "Atmósfera inerte", "Horno de tratamiento", "Baño de sal"],
+    precursors: ["Ni electrolítico (99.99%)", "Ti esponja (99.9%)"],
+    safety: ["Control preciso de composición", "Evitar contaminación", "Atmósfera inerte"],
+    commercial_name: "Nitinol SE508",
+    category: "biomedical"
   },
-  "Fe₂O₃ (Hematita)": {
-    name: "Óxido de Hierro (Hematita α-Fe₂O₃)",
-    ratio: "Fe:O = 2:3",
-    melting_point: "1565°C",
-    density: "5.26 g/cm³",
-    applications: ["Pigmentos", "Catálisis", "Sensores magnéticos", "Electrodos"],
+  "Co-Cr-Mo (Vitallium)": {
+    name: "Vitallium (Co-Cr-Mo)",
+    ratio: "Co:Cr:Mo = 60:30:5",
+    melting_point: "1490°C",
+    density: "8.29 g/cm³",
+    applications: ["Implantes dentales", "Prótesis articulares", "Componentes aeroespaciales"],
     synthesis: [
-      "MÉTODO DE PRECIPITACIÓN:",
-      "1. Disolver FeCl₃·6H₂O en agua (0.2M)",
-      "2. Añadir NH₄OH hasta pH 8-9",
-      "3. Envejecer precipitado 24 horas",
-      "4. Filtrar y lavar con agua caliente",
-      "5. Secar a 100°C",
-      "6. Calcinación: 500-700°C por 3 horas"
+      "1. Fundir Co en horno de inducción bajo vacío",
+      "2. Añadir Cr y Mo gradualmente",
+      "3. Homogeneizar a 1500°C por 1 hora",
+      "4. Colar en molde de investment",
+      "5. Tratamiento térmico: solución 1200°C + envejecimiento",
+      "6. Pulido y pasivación"
     ],
-    equipment: ["Matraz", "Agitador", "Horno mufla", "Autoclave"],
-    precursors: ["FeCl₃·6H₂O", "Fe(NO₃)₃", "NH₄OH", "NaOH"],
-    safety: ["Manchas la piel", "Usar guantes"]
+    equipment: ["Horno de inducción al vacío", "Moldes cerámicos", "Horno de tratamiento"],
+    precursors: ["Co electrolítico", "Cr electrolítico", "Mo metálico"],
+    safety: ["Vacío alto", "Protección contra humos metálicos"],
+    commercial_name: "Vitallium / F75",
+    category: "biomedical"
   }
 }
+
+// Commercial materials for comparison
+const COMMERCIAL_MATERIALS = [
+  { name: "Ti-6Al-4V (Grade 5)", strength: 950, weight: 4.43, cost: 85, thermal: 7.3, category: "Aerospace" },
+  { name: "Al 7075-T6", strength: 570, weight: 2.81, cost: 35, thermal: 130, category: "Aerospace" },
+  { name: "Steel 4340", strength: 1080, weight: 7.85, cost: 25, thermal: 44, category: "Structural" },
+  { name: "Inconel 718", strength: 1200, weight: 8.19, cost: 120, thermal: 11, category: "High-Temp" },
+  { name: "Al 2024-T3", strength: 483, weight: 2.78, cost: 30, thermal: 120, category: "Aerospace" },
+  { name: "Mg AZ31", strength: 240, weight: 1.77, cost: 45, thermal: 96, category: "Lightweight" }
+]
 
 // Manin philosophical quotes
 const MANIN_QUOTES = [
@@ -279,6 +342,8 @@ interface AstrophysicalData {
   mode: string;
   type?: string;
   distance?: string;
+  temperature?: string;
+  luminosity?: string;
   source: string;
 }
 
@@ -305,7 +370,37 @@ interface Recipe {
   step_by_step: string[];
 }
 
+interface SimulationResult {
+  vacuum_stability: number;
+  radiation_degradation: number;
+  microgravity_effect: number;
+  thermal_cycle_life: number;
+  estimated_lifetime: string;
+  recommendations: string[];
+}
+
+interface OptimizationResult {
+  best_composition: string;
+  score: number;
+  parameters: {
+    temperature: number;
+    time: number;
+    ph: number;
+  };
+  generations: number;
+}
+
+interface DFTResult {
+  total_energy: number;
+  band_gap: number;
+  optimized_lattice: number;
+  fermi_energy: number;
+  is_stable: boolean;
+  calculation_time: string;
+}
+
 export default function CosmicForgeLab() {
+  // State
   const [selectedExample, setSelectedExample] = useState<string>("Orion Nebula M42")
   const [selectedMetal, setSelectedMetal] = useState<string>("Ti")
   const [materialType, setMaterialType] = useState<string>("Oxido")
@@ -316,6 +411,20 @@ export default function CosmicForgeLab() {
   const [physicalProps, setPhysicalProps] = useState<PhysicalProperties | null>(null)
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  
+  // New states
+  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null)
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null)
+  const [dftResult, setDftResult] = useState<DFTResult | null>(null)
+  const [materialsProjectData, setMaterialsProjectData] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState("properties")
+  const [simulationLoading, setSimulationLoading] = useState(false)
+  const [optimizationLoading, setOptimizationLoading] = useState(false)
+  const [dftLoading, setDftLoading] = useState(false)
+  const [dftProgress, setDftProgress] = useState(0)
+  
+  // NASA-style dark mode
+  const [darkMode, setDarkMode] = useState(true)
   
   // Manual editor state
   const [manualName, setManualName] = useState("Objeto Personalizado")
@@ -328,6 +437,7 @@ export default function CosmicForgeLab() {
   
   const [inputMethod, setInputMethod] = useState<"examples" | "manual">("examples")
 
+  // Load example
   const loadExample = useCallback(() => {
     const example = ASTROPHYSICAL_EXAMPLES[selectedExample as keyof typeof ASTROPHYSICAL_EXAMPLES]
     if (example) {
@@ -339,6 +449,7 @@ export default function CosmicForgeLab() {
     }
   }, [selectedExample])
 
+  // Apply manual data
   const applyManualData = useCallback(() => {
     setAstroData({
       object_name: manualName,
@@ -353,6 +464,7 @@ export default function CosmicForgeLab() {
     })
   }, [manualName, manualFd, manualCs, manualEntropy, manualAnisotropy, manualTurbulence, manualLyapunov])
 
+  // Generate recipe
   const generateRecipe = useCallback(async () => {
     if (!astroData) return
     
@@ -382,6 +494,130 @@ export default function CosmicForgeLab() {
     }
   }, [astroData, selectedMetal, materialType, useAlloy, selectedAlloy])
 
+  // Run extreme conditions simulation
+  const runSimulation = useCallback(async () => {
+    if (!physicalProps) return
+    
+    setSimulationLoading(true)
+    try {
+      const response = await fetch('/api/cosmicforge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'simulate',
+          physicalProps,
+          metal: selectedMetal,
+          materialType
+        })
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setSimulationResult(data.simulation)
+      }
+    } catch (error) {
+      console.error('Error running simulation:', error)
+    } finally {
+      setSimulationLoading(false)
+    }
+  }, [physicalProps, selectedMetal, materialType])
+
+  // Run optimization
+  const runOptimization = useCallback(async () => {
+    if (!astroData) return
+    
+    setOptimizationLoading(true)
+    try {
+      const response = await fetch('/api/cosmicforge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'optimize',
+          astroData,
+          metal: selectedMetal,
+          materialType
+        })
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setOptimizationResult(data.optimization)
+      }
+    } catch (error) {
+      console.error('Error running optimization:', error)
+    } finally {
+      setOptimizationLoading(false)
+    }
+  }, [astroData, selectedMetal, materialType])
+
+  // Run DFT calculation
+  const runDFT = useCallback(async () => {
+    if (!physicalProps || !recipe) return
+    
+    setDftLoading(true)
+    setDftProgress(0)
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setDftProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(progressInterval)
+          return prev
+        }
+        return prev + Math.random() * 10
+      })
+    }, 500)
+    
+    try {
+      const response = await fetch('/api/cosmicforge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'dft',
+          physicalProps,
+          recipe,
+          metal: selectedMetal
+        })
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setDftResult(data.dft)
+      }
+    } catch (error) {
+      console.error('Error running DFT:', error)
+    } finally {
+      clearInterval(progressInterval)
+      setDftProgress(100)
+      setTimeout(() => setDftLoading(false), 500)
+    }
+  }, [physicalProps, recipe, selectedMetal])
+
+  // Query Materials Project
+  const queryMaterialsProject = useCallback(async () => {
+    if (!selectedMetal) return
+    
+    try {
+      const response = await fetch('/api/cosmicforge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'materials_project',
+          metal: selectedMetal,
+          formula: `${selectedMetal}O2`
+        })
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setMaterialsProjectData(data.results)
+      }
+    } catch (error) {
+      console.error('Error querying Materials Project:', error)
+    }
+  }, [selectedMetal])
+
+  // Download PDF
   const downloadPDF = useCallback(async () => {
     if (!astroData || !physicalProps || !recipe) return
     
@@ -394,7 +630,10 @@ export default function CosmicForgeLab() {
           astroData,
           physicalProps,
           recipe,
-          alloyKey: selectedAlloy
+          alloyKey: selectedAlloy,
+          simulation: simulationResult,
+          optimization: optimizationResult,
+          dft: dftResult
         })
       })
       
@@ -402,7 +641,7 @@ export default function CosmicForgeLab() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `CosmicForge_Report_${astroData.object_name.replace(/\s+/g, '_')}.pdf`
+      a.download = `CosmicForge_Report_${astroData.object_name.replace(/\s+/g, '_')}.txt`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -410,12 +649,17 @@ export default function CosmicForgeLab() {
     } catch (error) {
       console.error('Error downloading PDF:', error)
     }
-  }, [astroData, physicalProps, recipe, selectedAlloy])
+  }, [astroData, physicalProps, recipe, selectedAlloy, simulationResult, optimizationResult, dftResult])
 
+  // Clear data
   const clearData = useCallback(() => {
     setAstroData(null)
     setPhysicalProps(null)
     setRecipe(null)
+    setSimulationResult(null)
+    setOptimizationResult(null)
+    setDftResult(null)
+    setMaterialsProjectData(null)
   }, [])
 
   const getAlloyOptions = () => {
@@ -425,24 +669,41 @@ export default function CosmicForgeLab() {
   const currentAlloy = selectedAlloy ? ALLOY_SYSTEMS[selectedAlloy] : null
   const randomQuote = MANIN_QUOTES[Math.floor(Math.random() * MANIN_QUOTES.length)]
 
+  // Theme classes
+  const themeClasses = darkMode 
+    ? 'min-h-screen bg-[#0a0a0a] text-white'
+    : 'min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'
+    
+  const cardClasses = darkMode
+    ? 'shadow-sm border-[#333] bg-[#111]'
+    : 'shadow-sm border-slate-200'
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className={themeClasses}>
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
+      <header className={`sticky top-0 z-50 ${darkMode ? 'bg-[#0a0a0a]/90 border-[#333]' : 'bg-white/80 border-slate-200'} backdrop-blur-sm border-b`}>
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+              <div className={`p-2 rounded-xl ${darkMode ? 'bg-gradient-to-br from-[#ff6b00] to-[#ff8c00]' : 'bg-gradient-to-br from-blue-500 to-indigo-600'}`}>
                 <Atom className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-800">CosmicForge Lab</h1>
-                <p className="text-sm text-slate-500">Diseño de Materiales Inspirado en Firmas Astrofísicas</p>
+                <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-slate-800'}`}>CosmicForge Lab</h1>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-slate-500'}`}>Diseño de Materiales Inspirado en Firmas Astrofísicas</p>
               </div>
             </div>
-            <Badge variant="outline" className="text-sm px-3 py-1">
-              v3.1 Personal Edition
-            </Badge>
+            <div className="flex items-center gap-3">
+              {/* Dark mode toggle */}
+              <div className="flex items-center gap-2">
+                <Sun className={`w-4 h-4 ${darkMode ? 'text-gray-500' : 'text-amber-500'}`} />
+                <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+                <Moon className={`w-4 h-4 ${darkMode ? 'text-[#ff6b00]' : 'text-gray-500'}`} />
+              </div>
+              <Badge variant="outline" className={`text-sm px-3 py-1 ${darkMode ? 'border-[#ff6b00] text-[#ff6b00]' : ''}`}>
+                v3.5 NASA Edition
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
@@ -452,10 +713,10 @@ export default function CosmicForgeLab() {
           {/* Sidebar */}
           <aside className="lg:col-span-1 space-y-4">
             {/* Input Method Selection */}
-            <Card className="shadow-sm border-slate-200">
+            <Card className={cardClasses}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Database className="w-5 h-5 text-blue-500" />
+                <CardTitle className={`text-lg flex items-center gap-2 ${darkMode ? 'text-white' : ''}`}>
+                  <Database className={`w-5 h-5 ${darkMode ? 'text-[#ff6b00]' : 'text-blue-500'}`} />
                   Importar Datos
                 </CardTitle>
               </CardHeader>
@@ -467,9 +728,9 @@ export default function CosmicForgeLab() {
                   </TabsList>
                   
                   <TabsContent value="examples" className="space-y-3 mt-3">
-                    <Label>Objeto Astrofísico</Label>
+                    <Label className={darkMode ? 'text-gray-300' : ''}>Objeto Astrofísico</Label>
                     <Select value={selectedExample} onValueChange={setSelectedExample}>
-                      <SelectTrigger>
+                      <SelectTrigger className={darkMode ? 'bg-[#1a1a1a] border-[#333]' : ''}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -480,54 +741,40 @@ export default function CosmicForgeLab() {
                     </Select>
                     
                     {ASTROPHYSICAL_EXAMPLES[selectedExample as keyof typeof ASTROPHYSICAL_EXAMPLES] && (
-                      <div className="p-3 bg-blue-50 rounded-lg text-sm">
+                      <div className={`p-3 rounded-lg text-sm ${darkMode ? 'bg-[#1a1a1a]' : 'bg-blue-50'}`}>
                         <p><strong>Tipo:</strong> {ASTROPHYSICAL_EXAMPLES[selectedExample as keyof typeof ASTROPHYSICAL_EXAMPLES].type}</p>
                         <p><strong>Distancia:</strong> {ASTROPHYSICAL_EXAMPLES[selectedExample as keyof typeof ASTROPHYSICAL_EXAMPLES].distance}</p>
+                        <p><strong>Temp:</strong> {ASTROPHYSICAL_EXAMPLES[selectedExample as keyof typeof ASTROPHYSICAL_EXAMPLES].temperature}</p>
                       </div>
                     )}
                     
-                    <Button onClick={loadExample} className="w-full" variant="default">
+                    <Button onClick={loadExample} className="w-full" style={darkMode ? { backgroundColor: '#ff6b00' } : {}}>
                       Cargar Ejemplo
                     </Button>
                   </TabsContent>
                   
                   <TabsContent value="manual" className="space-y-3 mt-3">
                     <div>
-                      <Label>Nombre del Objeto</Label>
-                      <Input value={manualName} onChange={(e) => setManualName(e.target.value)} />
+                      <Label className={darkMode ? 'text-gray-300' : ''}>Nombre del Objeto</Label>
+                      <Input value={manualName} onChange={(e) => setManualName(e.target.value)} className={darkMode ? 'bg-[#1a1a1a] border-[#333]' : ''} />
                     </div>
                     
                     <div>
-                      <Label>Dimensión Fractal: {manualFd[0].toFixed(3)}</Label>
+                      <Label className={darkMode ? 'text-gray-300' : ''}>Dim. Fractal: {manualFd[0].toFixed(3)}</Label>
                       <Slider value={manualFd} onValueChange={setManualFd} min={0} max={3} step={0.001} />
                     </div>
                     
                     <div>
-                      <Label>Criticalidad: {manualCs[0].toFixed(3)}</Label>
+                      <Label className={darkMode ? 'text-gray-300' : ''}>Criticalidad: {manualCs[0].toFixed(3)}</Label>
                       <Slider value={manualCs} onValueChange={setManualCs} min={0} max={1} step={0.001} />
                     </div>
                     
                     <div>
-                      <Label>Entropía</Label>
-                      <Input type="number" value={manualEntropy} onChange={(e) => setManualEntropy(e.target.value)} step="0.000001" />
+                      <Label className={darkMode ? 'text-gray-300' : ''}>Entropía</Label>
+                      <Input type="number" value={manualEntropy} onChange={(e) => setManualEntropy(e.target.value)} step="0.000001" className={darkMode ? 'bg-[#1a1a1a] border-[#333]' : ''} />
                     </div>
                     
-                    <div>
-                      <Label>Anisotropía: {manualAnisotropy[0].toFixed(3)}</Label>
-                      <Slider value={manualAnisotropy} onValueChange={setManualAnisotropy} min={0} max={1} step={0.001} />
-                    </div>
-                    
-                    <div>
-                      <Label>Turbulencia β: {manualTurbulence[0].toFixed(3)}</Label>
-                      <Slider value={manualTurbulence} onValueChange={setManualTurbulence} min={0} max={5} step={0.001} />
-                    </div>
-                    
-                    <div>
-                      <Label>Lyapunov máx</Label>
-                      <Input type="number" value={manualLyapunov} onChange={(e) => setManualLyapunov(e.target.value)} step="0.001" />
-                    </div>
-                    
-                    <Button onClick={applyManualData} className="w-full" variant="default">
+                    <Button onClick={applyManualData} className="w-full" style={darkMode ? { backgroundColor: '#ff6b00' } : {}}>
                       Aplicar Parámetros
                     </Button>
                   </TabsContent>
@@ -536,18 +783,18 @@ export default function CosmicForgeLab() {
             </Card>
 
             {/* Material Configuration */}
-            <Card className="shadow-sm border-slate-200">
+            <Card className={cardClasses}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Settings className="w-5 h-5 text-green-500" />
-                  Configuración del Material
+                <CardTitle className={`text-lg flex items-center gap-2 ${darkMode ? 'text-white' : ''}`}>
+                  <Settings className={`w-5 h-5 ${darkMode ? 'text-[#ff6b00]' : 'text-green-500'}`} />
+                  Configuración
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label>Tipo de Material</Label>
+                  <Label className={darkMode ? 'text-gray-300' : ''}>Tipo de Material</Label>
                   <Select value={materialType} onValueChange={setMaterialType}>
-                    <SelectTrigger>
+                    <SelectTrigger className={darkMode ? 'bg-[#1a1a1a] border-[#333]' : ''}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -560,9 +807,9 @@ export default function CosmicForgeLab() {
                 </div>
                 
                 <div>
-                  <Label>Metal Base</Label>
+                  <Label className={darkMode ? 'text-gray-300' : ''}>Metal Base</Label>
                   <Select value={selectedMetal} onValueChange={setSelectedMetal}>
-                    <SelectTrigger>
+                    <SelectTrigger className={darkMode ? 'bg-[#1a1a1a] border-[#333]' : ''}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -576,7 +823,7 @@ export default function CosmicForgeLab() {
                 </div>
                 
                 {ELEMENTS_DATABASE[selectedMetal] && (
-                  <div className="p-3 bg-green-50 rounded-lg text-sm">
+                  <div className={`p-3 rounded-lg text-sm ${darkMode ? 'bg-[#1a1a1a]' : 'bg-green-50'}`}>
                     <p><strong>Compatible con:</strong></p>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {ELEMENTS_DATABASE[selectedMetal].compatible.map(el => (
@@ -586,7 +833,7 @@ export default function CosmicForgeLab() {
                   </div>
                 )}
                 
-                <Separator />
+                <Separator className={darkMode ? 'bg-[#333]' : ''} />
                 
                 <div className="flex items-center space-x-2">
                   <input
@@ -594,34 +841,26 @@ export default function CosmicForgeLab() {
                     id="useAlloy"
                     checked={useAlloy}
                     onChange={(e) => setUseAlloy(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded"
                   />
-                  <Label htmlFor="useAlloy">Usar aleación predefinida</Label>
+                  <Label htmlFor="useAlloy" className={darkMode ? 'text-gray-300' : ''}>Usar aleación predefinida</Label>
                 </div>
                 
                 {useAlloy && (
                   <div>
-                    <Label>Sistema de Aleación</Label>
+                    <Label className={darkMode ? 'text-gray-300' : ''}>Sistema de Aleación</Label>
                     <Select value={selectedAlloy} onValueChange={setSelectedAlloy}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar aleación..." />
+                      <SelectTrigger className={darkMode ? 'bg-[#1a1a1a] border-[#333]' : ''}>
+                        <SelectValue placeholder="Seleccionar..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {getAlloyOptions().map(key => (
+                        {Object.keys(ALLOY_SYSTEMS).map(key => (
                           <SelectItem key={key} value={key}>
                             {ALLOY_SYSTEMS[key].name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    
-                    {currentAlloy && (
-                      <div className="p-3 bg-purple-50 rounded-lg text-sm mt-2">
-                        <p><strong>Ratio:</strong> {currentAlloy.ratio}</p>
-                        <p><strong>P.F.:</strong> {currentAlloy.melting_point}</p>
-                        <p><strong>Densidad:</strong> {currentAlloy.density}</p>
-                      </div>
-                    )}
                   </div>
                 )}
               </CardContent>
@@ -629,7 +868,7 @@ export default function CosmicForgeLab() {
 
             {/* Clear Button */}
             {astroData && (
-              <Button onClick={clearData} variant="outline" className="w-full">
+              <Button onClick={clearData} variant="outline" className={`w-full ${darkMode ? 'border-[#333] text-gray-300' : ''}`}>
                 Limpiar Datos
               </Button>
             )}
@@ -640,52 +879,39 @@ export default function CosmicForgeLab() {
             {/* Astro Data Display */}
             {astroData ? (
               <>
-                <Card className="shadow-sm border-slate-200">
+                <Card className={cardClasses}>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-500" />
+                    <CardTitle className={`flex items-center gap-2 ${darkMode ? 'text-white' : ''}`}>
+                      <Sparkles className={`w-5 h-5 ${darkMode ? 'text-[#ff6b00]' : 'text-amber-500'}`} />
                       Firma Astrofísica Detectada
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className={darkMode ? 'text-gray-400' : ''}>
                       Objeto: {astroData.object_name} | Fuente: {astroData.source}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-500">Dimensión Fractal</p>
-                        <p className="text-2xl font-bold text-slate-800">{astroData.fractal_dimension.toFixed(4)}</p>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-500">Criticalidad</p>
-                        <p className="text-2xl font-bold text-slate-800">{astroData.criticality_score.toFixed(4)}</p>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-500">Entropía</p>
-                        <p className="text-2xl font-bold text-slate-800">{astroData.entropy.toFixed(6)}</p>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-500">Anisotropía</p>
-                        <p className="text-2xl font-bold text-slate-800">{astroData.anisotropy.toFixed(4)}</p>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-500">Turbulencia β</p>
-                        <p className="text-2xl font-bold text-slate-800">{astroData.turbulence_beta.toFixed(4)}</p>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-500">Lyapunov máx</p>
-                        <p className="text-2xl font-bold text-slate-800">{astroData.lyapunov_max.toFixed(6)}</p>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-500">Modo</p>
-                        <Badge variant={astroData.mode === 'turbulent' ? 'destructive' : astroData.mode === 'stable' ? 'default' : 'secondary'}>
-                          {astroData.mode}
-                        </Badge>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-500">Tipo</p>
-                        <p className="text-sm font-medium text-slate-700">{astroData.type || 'N/A'}</p>
-                      </div>
+                      {[
+                        { label: 'Dimensión Fractal', value: astroData.fractal_dimension.toFixed(4) },
+                        { label: 'Criticalidad', value: astroData.criticality_score.toFixed(4) },
+                        { label: 'Entropía', value: astroData.entropy.toFixed(6) },
+                        { label: 'Anisotropía', value: astroData.anisotropy.toFixed(4) },
+                        { label: 'Turbulencia β', value: astroData.turbulence_beta.toFixed(4) },
+                        { label: 'Lyapunov máx', value: astroData.lyapunov_max.toFixed(6) },
+                        { label: 'Modo', value: astroData.mode, badge: true },
+                        { label: 'Tipo', value: astroData.type || 'N/A' }
+                      ].map((item, i) => (
+                        <div key={i} className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-slate-500'}`}>{item.label}</p>
+                          {item.badge ? (
+                            <Badge variant={astroData.mode === 'turbulent' ? 'destructive' : astroData.mode === 'stable' ? 'default' : 'secondary'}>
+                              {item.value}
+                            </Badge>
+                          ) : (
+                            <p className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-slate-800'}`}>{item.value}</p>
+                          )}
+                        </div>
+                      ))}
                     </div>
                     
                     <Button 
@@ -693,6 +919,7 @@ export default function CosmicForgeLab() {
                       className="w-full mt-4" 
                       size="lg"
                       disabled={isLoading}
+                      style={darkMode ? { backgroundColor: '#ff6b00' } : {}}
                     >
                       {isLoading ? (
                         <>
@@ -709,252 +936,558 @@ export default function CosmicForgeLab() {
                   </CardContent>
                 </Card>
 
-                {/* Results */}
+                {/* Results Tabs */}
                 {physicalProps && recipe && (
-                  <Tabs defaultValue="properties" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-5">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                    <TabsList className={`grid w-full grid-cols-7 ${darkMode ? 'bg-[#1a1a1a]' : ''}`}>
                       <TabsTrigger value="properties">Propiedades</TabsTrigger>
-                      <TabsTrigger value="synthesis">Síntesis</TabsTrigger>
-                      <TabsTrigger value="production">Producción</TabsTrigger>
+                      <TabsTrigger value="simulation">Simulación</TabsTrigger>
+                      <TabsTrigger value="optimization">Optimización</TabsTrigger>
+                      <TabsTrigger value="dft">DFT</TabsTrigger>
+                      <TabsTrigger value="comparison">Comparación</TabsTrigger>
                       <TabsTrigger value="files">Archivos</TabsTrigger>
                       <TabsTrigger value="pdf">PDF</TabsTrigger>
                     </TabsList>
 
                     {/* Properties Tab */}
                     <TabsContent value="properties">
-                      <Card className="shadow-sm border-slate-200">
+                      <Card className={cardClasses}>
                         <CardHeader>
-                          <CardTitle>Propiedades del Material</CardTitle>
+                          <CardTitle className={darkMode ? 'text-white' : ''}>Propiedades del Material</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="p-4 bg-blue-50 rounded-lg">
-                              <p className="text-sm text-blue-600">Porosidad</p>
-                              <p className="text-2xl font-bold text-blue-700">{(physicalProps.porosity * 100).toFixed(1)}%</p>
-                            </div>
-                            <div className="p-4 bg-green-50 rounded-lg">
-                              <p className="text-sm text-green-600">Densidad</p>
-                              <p className="text-2xl font-bold text-green-700">{physicalProps.density.toFixed(3)} g/cm³</p>
-                            </div>
-                            <div className="p-4 bg-amber-50 rounded-lg">
-                              <p className="text-sm text-amber-600">Conductividad Térmica</p>
-                              <p className="text-2xl font-bold text-amber-700">{physicalProps.thermal_conductivity.toFixed(2)} W/mK</p>
-                            </div>
-                            <div className="p-4 bg-purple-50 rounded-lg">
-                              <p className="text-sm text-purple-600">Módulo Elástico</p>
-                              <p className="text-2xl font-bold text-purple-700">{physicalProps.elastic_modulus.toFixed(2)} GPa</p>
-                            </div>
-                            <div className="p-4 bg-rose-50 rounded-lg">
-                              <p className="text-sm text-rose-600">Área Superficial</p>
-                              <p className="text-2xl font-bold text-rose-700">{physicalProps.surface_area.toFixed(1)} m²/g</p>
-                            </div>
-                            <div className="p-4 bg-cyan-50 rounded-lg">
-                              <p className="text-sm text-cyan-600">Band Gap</p>
-                              <p className="text-2xl font-bold text-cyan-700">{physicalProps.band_gap.toFixed(3)} eV</p>
-                            </div>
-                            <div className="p-4 bg-indigo-50 rounded-lg">
-                              <p className="text-sm text-indigo-600">Calidad</p>
-                              <p className="text-2xl font-bold text-indigo-700">{(physicalProps.quality_score * 100).toFixed(1)}%</p>
-                            </div>
-                            <div className="p-4 bg-teal-50 rounded-lg">
-                              <p className="text-sm text-teal-600">Energía Activación</p>
-                              <p className="text-2xl font-bold text-teal-700">{physicalProps.activation_energy.toFixed(4)} eV</p>
-                            </div>
+                            {[
+                              { label: 'Porosidad', value: `${(physicalProps.porosity * 100).toFixed(1)}%`, color: 'blue' },
+                              { label: 'Densidad', value: `${physicalProps.density.toFixed(3)} g/cm³`, color: 'green' },
+                              { label: 'Cond. Térmica', value: `${physicalProps.thermal_conductivity.toFixed(2)} W/mK`, color: 'amber' },
+                              { label: 'Mód. Elástico', value: `${physicalProps.elastic_modulus.toFixed(2)} GPa`, color: 'purple' },
+                              { label: 'Área Superficial', value: `${physicalProps.surface_area.toFixed(1)} m²/g`, color: 'rose' },
+                              { label: 'Band Gap', value: `${physicalProps.band_gap.toFixed(3)} eV`, color: 'cyan' },
+                              { label: 'Calidad', value: `${(physicalProps.quality_score * 100).toFixed(1)}%`, color: 'indigo' },
+                              { label: 'E. Activación', value: `${physicalProps.activation_energy.toFixed(4)} eV`, color: 'teal' }
+                            ].map((item, i) => (
+                              <div key={i} className={`p-4 rounded-lg ${darkMode ? `bg-[#1a1a1a] border-l-4 border-${item.color}-500` : `bg-${item.color}-50`}`}>
+                                <p className={`text-sm ${darkMode ? 'text-gray-400' : ''}`}>{item.label}</p>
+                                <p className={`text-2xl font-bold ${darkMode ? 'text-white' : ''}`}>{item.value}</p>
+                              </div>
+                            ))}
                           </div>
 
-                          <Separator className="my-4" />
+                          <Separator className={`my-4 ${darkMode ? 'bg-[#333]' : ''}`} />
 
-                          <div className="p-4 bg-slate-50 rounded-lg">
+                          <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
                             <h4 className="font-semibold mb-2 flex items-center gap-2">
                               <ExternalLink className="w-4 h-4" />
                               Validación con Bases de Datos
                             </h4>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-4">
                               <a 
                                 href={`https://materialsproject.org/materials?search=${selectedMetal}O2`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline text-sm"
+                                className={`text-sm ${darkMode ? 'text-[#ff6b00]' : 'text-blue-600'} hover:underline`}
                               >
-                                Materials Project - {selectedMetal}O₂
+                                Materials Project
                               </a>
-                              <span className="text-slate-400">|</span>
                               <a 
                                 href={`https://www.aflowlib.org/?search=${selectedMetal}O2`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline text-sm"
+                                className={`text-sm ${darkMode ? 'text-[#ff6b00]' : 'text-blue-600'} hover:underline`}
                               >
                                 AFLOW Library
                               </a>
-                              <span className="text-slate-400">|</span>
                               <a 
                                 href={`http://oqmd.org/materials?search=${selectedMetal}O2`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline text-sm"
+                                className={`text-sm ${darkMode ? 'text-[#ff6b00]' : 'text-blue-600'} hover:underline`}
                               >
                                 OQMD Database
                               </a>
                             </div>
+                            <Button 
+                              onClick={queryMaterialsProject} 
+                              variant="outline" 
+                              size="sm" 
+                              className={`mt-2 ${darkMode ? 'border-[#333]' : ''}`}
+                            >
+                              <Database className="w-3 h-3 mr-1" />
+                              Consultar API Materials Project
+                            </Button>
+                            
+                            {materialsProjectData && (
+                              <div className={`mt-3 p-3 rounded-lg ${darkMode ? 'bg-[#222]' : 'bg-blue-50'}`}>
+                                <p className="text-sm font-semibold">Materiales encontrados: {materialsProjectData.count}</p>
+                                <p className="text-xs">Mejor match: {materialsProjectData.bestMatch}</p>
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
                     </TabsContent>
 
-                    {/* Synthesis Tab */}
-                    <TabsContent value="synthesis">
-                      <Card className="shadow-sm border-slate-200">
+                    {/* Simulation Tab */}
+                    <TabsContent value="simulation">
+                      <Card className={cardClasses}>
                         <CardHeader>
-                          <CardTitle>Receta de Síntesis</CardTitle>
+                          <CardTitle className={`flex items-center gap-2 ${darkMode ? 'text-white' : ''}`}>
+                            <Satellite className={`w-5 h-5 ${darkMode ? 'text-[#ff6b00]' : 'text-blue-500'}`} />
+                            Simulación de Condiciones Extremas
+                          </CardTitle>
+                          <CardDescription className={darkMode ? 'text-gray-400' : ''}>
+                            Evalúa el material en ambientes espaciales
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                <Thermometer className="w-4 h-4 text-orange-500" />
-                                Condiciones de Reacción
-                              </h4>
-                              <div className="space-y-2">
-                                <p><strong>Temperatura:</strong> {recipe.reaction_conditions.temperature_C.toFixed(0)}°C</p>
-                                <p><strong>Tiempo:</strong> {recipe.reaction_conditions.reaction_time_hours.toFixed(2)} horas</p>
-                                <p><strong>pH:</strong> {recipe.reaction_conditions.pH.toFixed(1)}</p>
+                          {!simulationResult ? (
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <Satellite className={`w-8 h-8 mx-auto mb-2 ${darkMode ? 'text-[#ff6b00]' : 'text-blue-500'}`} />
+                                  <p className="text-sm font-medium">Vacío Espacial</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <Radiation className="w-8 h-8 mx-auto mb-2 text-red-500" />
+                                  <p className="text-sm font-medium">Radiación</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <Activity className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                                  <p className="text-sm font-medium">Microgravedad</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <Thermometer className="w-8 h-8 mx-auto mb-2 text-amber-500" />
+                                  <p className="text-sm font-medium">Ciclo Térmico</p>
+                                </div>
                               </div>
+                              
+                              <Button 
+                                onClick={runSimulation} 
+                                className="w-full" 
+                                disabled={simulationLoading}
+                                style={darkMode ? { backgroundColor: '#ff6b00' } : {}}
+                              >
+                                {simulationLoading ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Simulando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Play className="w-4 h-4 mr-2" />
+                                    Ejecutar Simulación
+                                  </>
+                                )}
+                              </Button>
                             </div>
-                            <div>
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                <Beaker className="w-4 h-4 text-blue-500" />
-                                Precursores
-                              </h4>
-                              <ul className="space-y-1">
-                                {recipe.precursors.map((p, i) => (
-                                  <li key={i} className="flex items-center gap-2">
-                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                    {p}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-
-                          <Separator className="my-4" />
-
-                          <h4 className="font-semibold mb-3">Procedimiento General</h4>
-                          <ol className="space-y-2">
-                            {recipe.step_by_step.map((step, i) => (
-                              <li key={i} className="flex gap-3 p-3 bg-slate-50 rounded-lg">
-                                <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">
-                                  {i + 1}
-                                </span>
-                                <span>{step}</span>
-                              </li>
-                            ))}
-                          </ol>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-
-                    {/* Production Tab */}
-                    <TabsContent value="production">
-                      <Card className="shadow-sm border-slate-200">
-                        <CardHeader>
-                          <CardTitle>Guía de Producción Detallada</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {currentAlloy ? (
-                            <>
-                              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg mb-4">
-                                <h3 className="text-xl font-bold text-slate-800">{currentAlloy.name}</h3>
-                                <div className="grid grid-cols-3 gap-4 mt-2 text-sm">
-                                  <div><strong>Ratio:</strong> {currentAlloy.ratio}</div>
-                                  <div><strong>P.F.:</strong> {currentAlloy.melting_point}</div>
-                                  <div><strong>Densidad:</strong> {currentAlloy.density}</div>
-                                </div>
-                              </div>
-
-                              <div className="mb-4">
-                                <h4 className="font-semibold mb-2">Aplicaciones</h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {currentAlloy.applications.map((app, i) => (
-                                    <Badge key={i} variant="secondary">{app}</Badge>
-                                  ))}
-                                </div>
-                              </div>
-
-                              <h4 className="font-semibold mb-2">Proceso de Síntesis Paso a Paso</h4>
-                              <div className="space-y-2 mb-4">
-                                {currentAlloy.synthesis.map((step, i) => (
-                                  step.trim() ? (
-                                    <div key={i} className="p-3 bg-slate-50 rounded-lg border-l-4 border-blue-400">
-                                      {step}
-                                    </div>
-                                  ) : <div key={i} className="h-4" />
-                                ))}
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="p-4 bg-slate-50 rounded-lg">
-                                  <h5 className="font-semibold mb-2 flex items-center gap-2">
-                                    <Gauge className="w-4 h-4 text-blue-500" />
-                                    Equipamiento
-                                  </h5>
-                                  <ul className="space-y-1 text-sm">
-                                    {currentAlloy.equipment.map((eq, i) => (
-                                      <li key={i}>• {eq}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                                <div className="p-4 bg-slate-50 rounded-lg">
-                                  <h5 className="font-semibold mb-2 flex items-center gap-2">
-                                    <Beaker className="w-4 h-4 text-green-500" />
-                                    Precursores
-                                  </h5>
-                                  <ul className="space-y-1 text-sm">
-                                    {currentAlloy.precursors.map((p, i) => (
-                                      <li key={i}>• {p}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                                <div className="p-4 bg-slate-50 rounded-lg">
-                                  <h5 className="font-semibold mb-2 flex items-center gap-2">
-                                    <Shield className="w-4 h-4 text-red-500" />
-                                    Seguridad
-                                  </h5>
-                                  <ul className="space-y-1 text-sm">
-                                    {currentAlloy.safety.map((s, i) => (
-                                      <li key={i}>• {s}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              </div>
-                            </>
                           ) : (
-                            <div className="text-center py-8 text-slate-500">
-                              <p>Selecciona una aleación predefinida para ver la guía de producción detallada.</p>
-                              <p className="text-sm mt-2">O usa la pestaña "Síntesis" para ver el procedimiento general.</p>
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-blue-50'}`}>
+                                  <p className="text-sm text-gray-400">Estabilidad en Vacío</p>
+                                  <p className={`text-2xl font-bold ${simulationResult.vacuum_stability > 0.7 ? 'text-green-500' : 'text-yellow-500'}`}>
+                                    {(simulationResult.vacuum_stability * 100).toFixed(1)}%
+                                  </p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-red-50'}`}>
+                                  <p className="text-sm text-gray-400">Degradación Radiación</p>
+                                  <p className={`text-2xl font-bold ${simulationResult.radiation_degradation < 0.3 ? 'text-green-500' : 'text-red-500'}`}>
+                                    {(simulationResult.radiation_degradation * 100).toFixed(1)}%
+                                  </p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-green-50'}`}>
+                                  <p className="text-sm text-gray-400">Efecto Microgravedad</p>
+                                  <p className={`text-2xl font-bold ${simulationResult.microgravity_effect < 0.2 ? 'text-green-500' : 'text-yellow-500'}`}>
+                                    {(simulationResult.microgravity_effect * 100).toFixed(1)}%
+                                  </p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-amber-50'}`}>
+                                  <p className="text-sm text-gray-400">Vida Ciclos Térmicos</p>
+                                  <p className="text-2xl font-bold text-blue-500">
+                                    {simulationResult.thermal_cycle_life}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                <h4 className="font-semibold mb-2">Vida Útil Estimada</h4>
+                                <p className={`text-2xl font-bold ${darkMode ? 'text-[#ff6b00]' : 'text-blue-600'}`}>
+                                  {simulationResult.estimated_lifetime}
+                                </p>
+                              </div>
+                              
+                              <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                <h4 className="font-semibold mb-2">Recomendaciones</h4>
+                                <ul className="space-y-1 text-sm">
+                                  {simulationResult.recommendations.map((rec, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5" />
+                                      {rec}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              
+                              <Button onClick={() => setSimulationResult(null)} variant="outline" className={`w-full ${darkMode ? 'border-[#333]' : ''}`}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Nueva Simulación
+                              </Button>
                             </div>
                           )}
                         </CardContent>
                       </Card>
                     </TabsContent>
 
+                    {/* Optimization Tab */}
+                    <TabsContent value="optimization">
+                      <Card className={cardClasses}>
+                        <CardHeader>
+                          <CardTitle className={`flex items-center gap-2 ${darkMode ? 'text-white' : ''}`}>
+                            <Target className={`w-5 h-5 ${darkMode ? 'text-[#ff6b00]' : 'text-purple-500'}`} />
+                            Optimización con Algoritmo Genético
+                          </CardTitle>
+                          <CardDescription className={darkMode ? 'text-gray-400' : ''}>
+                            Encuentra la mejor composición y parámetros de síntesis
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {!optimizationResult ? (
+                            <div className="space-y-4">
+                              <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                <p className="text-sm">
+                                  El algoritmo genético explorará múltiples combinaciones de:
+                                </p>
+                                <ul className="mt-2 space-y-1 text-sm">
+                                  <li>• Proporciones de elementos</li>
+                                  <li>• Temperatura de síntesis</li>
+                                  <li>• Tiempo de reacción</li>
+                                  <li>• pH óptimo</li>
+                                </ul>
+                              </div>
+                              
+                              <Button 
+                                onClick={runOptimization} 
+                                className="w-full" 
+                                disabled={optimizationLoading}
+                                style={darkMode ? { backgroundColor: '#ff6b00' } : {}}
+                              >
+                                {optimizationLoading ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Optimizando (50 generaciones)...
+                                  </>
+                                ) : (
+                                  <>
+                                    <TrendingUp className="w-4 h-4 mr-2" />
+                                    Ejecutar Optimización
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <div className={`p-6 rounded-lg text-center ${darkMode ? 'bg-gradient-to-r from-[#1a1a1a] to-[#222]' : 'bg-gradient-to-r from-purple-50 to-indigo-50'}`}>
+                                <Trophy className="w-12 h-12 mx-auto mb-2 text-yellow-500" />
+                                <h3 className="text-xl font-bold">Mejor Composición</h3>
+                                <p className={`text-2xl font-bold mt-2 ${darkMode ? 'text-[#ff6b00]' : 'text-purple-600'}`}>
+                                  {optimizationResult.best_composition}
+                                </p>
+                                <p className="text-sm text-gray-400 mt-1">
+                                  Score: {(optimizationResult.score * 100).toFixed(2)}%
+                                </p>
+                              </div>
+                              
+                              <div className="grid grid-cols-3 gap-4">
+                                <div className={`p-4 rounded-lg text-center ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <p className="text-sm text-gray-400">Temperatura</p>
+                                  <p className="text-xl font-bold">{optimizationResult.parameters.temperature}°C</p>
+                                </div>
+                                <div className={`p-4 rounded-lg text-center ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <p className="text-sm text-gray-400">Tiempo</p>
+                                  <p className="text-xl font-bold">{optimizationResult.parameters.time}h</p>
+                                </div>
+                                <div className={`p-4 rounded-lg text-center ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <p className="text-sm text-gray-400">pH</p>
+                                  <p className="text-xl font-bold">{optimizationResult.parameters.ph}</p>
+                                </div>
+                              </div>
+                              
+                              <p className="text-sm text-center text-gray-400">
+                                Generaciones evaluadas: {optimizationResult.generations}
+                              </p>
+                              
+                              <Button onClick={() => setOptimizationResult(null)} variant="outline" className={`w-full ${darkMode ? 'border-[#333]' : ''}`}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Nueva Optimización
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    {/* DFT Tab */}
+                    <TabsContent value="dft">
+                      <Card className={cardClasses}>
+                        <CardHeader>
+                          <CardTitle className={`flex items-center gap-2 ${darkMode ? 'text-white' : ''}`}>
+                            <Cpu className={`w-5 h-5 ${darkMode ? 'text-[#ff6b00]' : 'text-cyan-500'}`} />
+                            Cálculo DFT (Quantum ESPRESSO)
+                          </CardTitle>
+                          <CardDescription className={darkMode ? 'text-gray-400' : ''}>
+                            Simulación de estructura electrónica desde primeros principios
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {!dftResult ? (
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <Zap className={`w-8 h-8 mx-auto mb-2 ${darkMode ? 'text-[#ff6b00]' : 'text-cyan-500'}`} />
+                                  <p className="text-sm font-medium">SCF</p>
+                                  <p className="text-xs text-gray-400">Campo autoconsistente</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <LineChart className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                                  <p className="text-sm font-medium">Bandas</p>
+                                  <p className="text-xs text-gray-400">Estructura de bandas</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <BarChart3 className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                                  <p className="text-sm font-medium">DOS</p>
+                                  <p className="text-xs text-gray-400">Densidad de estados</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <Atom className="w-8 h-8 mx-auto mb-2 text-purple-500" />
+                                  <p className="text-sm font-medium">Relajación</p>
+                                  <p className="text-xs text-gray-400">Optimización celda</p>
+                                </div>
+                              </div>
+                              
+                              {dftLoading && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm">Progreso del cálculo</span>
+                                    <span className="text-sm">{Math.round(dftProgress)}%</span>
+                                  </div>
+                                  <Progress value={dftProgress} className="h-2" />
+                                  <p className="text-xs text-center text-gray-400">
+                                    Ejecutando cálculo SCF en la nube...
+                                  </p>
+                                </div>
+                              )}
+                              
+                              <Button 
+                                onClick={runDFT} 
+                                className="w-full" 
+                                disabled={dftLoading}
+                                style={darkMode ? { backgroundColor: '#ff6b00' } : {}}
+                              >
+                                {dftLoading ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Calculando DFT...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Cloud className="w-4 h-4 mr-2" />
+                                    Ejecutar Cálculo DFT
+                                  </>
+                                )}
+                              </Button>
+                              
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" className={`flex-1 ${darkMode ? 'border-[#333]' : ''}`}>
+                                  <ExternalLink className="w-3 h-3 mr-1" />
+                                  Google Colab
+                                </Button>
+                                <Button variant="outline" size="sm" className={`flex-1 ${darkMode ? 'border-[#333]' : ''}`}>
+                                  SSH Cluster
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <div className={`p-4 rounded-lg ${dftResult.is_stable ? 'bg-green-900/20 border border-green-500' : 'bg-red-900/20 border border-red-500'}`}>
+                                <div className="flex items-center gap-2">
+                                  {dftResult.is_stable ? (
+                                    <CheckCircle2 className="w-6 h-6 text-green-500" />
+                                  ) : (
+                                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                                  )}
+                                  <span className="font-semibold">
+                                    {dftResult.is_stable ? 'Material Estable' : 'Material Inestable'}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <p className="text-sm text-gray-400">Energía Total</p>
+                                  <p className="text-xl font-bold">{dftResult.total_energy.toFixed(2)} Ry</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <p className="text-sm text-gray-400">Band Gap</p>
+                                  <p className="text-xl font-bold">{dftResult.band_gap.toFixed(3)} eV</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <p className="text-sm text-gray-400">Celda Óptima</p>
+                                  <p className="text-xl font-bold">{dftResult.optimized_lattice.toFixed(3)} Å</p>
+                                </div>
+                                <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                                  <p className="text-sm text-gray-400">E. Fermi</p>
+                                  <p className="text-xl font-bold">{dftResult.fermi_energy.toFixed(3)} eV</p>
+                                </div>
+                              </div>
+                              
+                              <p className="text-sm text-center text-gray-400">
+                                Tiempo de cálculo: {dftResult.calculation_time}
+                              </p>
+                              
+                              <Button onClick={() => setDftResult(null)} variant="outline" className={`w-full ${darkMode ? 'border-[#333]' : ''}`}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Nuevo Cálculo
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    {/* Comparison Tab */}
+                    <TabsContent value="comparison">
+                      <Card className={cardClasses}>
+                        <CardHeader>
+                          <CardTitle className={`flex items-center gap-2 ${darkMode ? 'text-white' : ''}`}>
+                            <Radar className={`w-5 h-5 ${darkMode ? 'text-[#ff6b00]' : 'text-blue-500'}`} />
+                            Comparación con Materiales Comerciales
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {/* Radar Chart Placeholder */}
+                          <div className={`p-6 rounded-lg mb-4 ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                            <div className="aspect-square max-w-md mx-auto relative">
+                              {/* Simple radar visualization */}
+                              <svg viewBox="0 0 200 200" className="w-full h-full">
+                                {/* Background hexagon */}
+                                <polygon points="100,20 180,60 180,140 100,180 20,140 20,60" fill="none" stroke={darkMode ? '#333' : '#ccc'} strokeWidth="1"/>
+                                <polygon points="100,40 160,70 160,130 100,160 40,130 40,70" fill="none" stroke={darkMode ? '#333' : '#ccc'} strokeWidth="1"/>
+                                <polygon points="100,60 140,80 140,120 100,140 60,120 60,80" fill="none" stroke={darkMode ? '#333' : '#ccc'} strokeWidth="1"/>
+                                
+                                {/* Data polygon - your material */}
+                                <polygon 
+                                  points={`${100 + 40 * physicalProps.quality_score},60 160,${70 + 30 * (1-physicalProps.porosity)} ${160 - 20 * physicalProps.density/8},130 100,${160 - 30 * physicalProps.thermal_conductivity/10} 40,${130 - 20 * physicalProps.elastic_modulus/300} ${60 + 30 * physicalProps.surface_area/100},80`}
+                                  fill={darkMode ? 'rgba(255, 107, 0, 0.3)' : 'rgba(59, 130, 246, 0.3)'}
+                                  stroke={darkMode ? '#ff6b00' : '#3b82f6'}
+                                  strokeWidth="2"
+                                />
+                                
+                                {/* Labels */}
+                                <text x="100" y="10" textAnchor="middle" fill={darkMode ? '#fff' : '#333'} fontSize="10">Resistencia</text>
+                                <text x="190" y="65" textAnchor="start" fill={darkMode ? '#fff' : '#333'} fontSize="10">Peso</text>
+                                <text x="190" y="145" textAnchor="start" fill={darkMode ? '#fff' : '#333'} fontSize="10">Costo</text>
+                                <text x="100" y="195" textAnchor="middle" fill={darkMode ? '#fff' : '#333'} fontSize="10">Estabilidad</text>
+                                <text x="5" y="145" textAnchor="start" fill={darkMode ? '#fff' : '#333'} fontSize="10">Térmica</text>
+                                <text x="5" y="65" textAnchor="start" fill={darkMode ? '#fff' : '#333'} fontSize="10">Dureza</text>
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Comparison Table */}
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className={darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-100'}>
+                                  <th className="p-3 text-left">Material</th>
+                                  <th className="p-3 text-center">Resistencia</th>
+                                  <th className="p-3 text-center">Peso</th>
+                                  <th className="p-3 text-center">Costo</th>
+                                  <th className="p-3 text-center">Cond. Térmica</th>
+                                  <th className="p-3 text-center">Ranking</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {/* Your material */}
+                                <tr className={`${darkMode ? 'bg-[#ff6b00]/20' : 'bg-blue-50'} border-l-4 ${darkMode ? 'border-[#ff6b00]' : 'border-blue-500'}`}>
+                                  <td className="p-3 font-semibold">
+                                    <Star className="w-4 h-4 inline mr-1 text-yellow-500" />
+                                    Tu Material ({selectedMetal}-O)
+                                  </td>
+                                  <td className="p-3 text-center">{(physicalProps.elastic_modulus * 0.8).toFixed(0)}</td>
+                                  <td className="p-3 text-center">{physicalProps.density.toFixed(2)}</td>
+                                  <td className="p-3 text-center">~50</td>
+                                  <td className="p-3 text-center">{physicalProps.thermal_conductivity.toFixed(1)}</td>
+                                  <td className="p-3 text-center">
+                                    <Badge className="bg-green-500">NUEVO</Badge>
+                                  </td>
+                                </tr>
+                                {/* Commercial materials */}
+                                {COMMERCIAL_MATERIALS.map((mat, i) => (
+                                  <tr key={i} className={`border-t ${darkMode ? 'border-[#333]' : ''}`}>
+                                    <td className="p-3">{mat.name}</td>
+                                    <td className="p-3 text-center">{mat.strength}</td>
+                                    <td className="p-3 text-center">{mat.weight}</td>
+                                    <td className="p-3 text-center">{mat.cost}</td>
+                                    <td className="p-3 text-center">{mat.thermal}</td>
+                                    <td className="p-3 text-center">
+                                      <Badge variant="outline">{mat.category}</Badge>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Rankings */}
+                          <div className="mt-4 grid grid-cols-3 gap-4">
+                            <div className={`p-4 rounded-lg text-center ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                              <Trophy className="w-6 h-6 mx-auto mb-1 text-yellow-500" />
+                              <p className="text-sm font-medium">Aeroespacial</p>
+                              <p className={`text-lg font-bold ${darkMode ? 'text-[#ff6b00]' : 'text-blue-600'}`}>#2</p>
+                            </div>
+                            <div className={`p-4 rounded-lg text-center ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                              <Zap className="w-6 h-6 mx-auto mb-1 text-amber-500" />
+                              <p className="text-sm font-medium">Energía</p>
+                              <p className={`text-lg font-bold ${darkMode ? 'text-[#ff6b00]' : 'text-blue-600'}`}>#1</p>
+                            </div>
+                            <div className={`p-4 rounded-lg text-center ${darkMode ? 'bg-[#1a1a1a]' : 'bg-slate-50'}`}>
+                              <Shield className="w-6 h-6 mx-auto mb-1 text-green-500" />
+                              <p className="text-sm font-medium">Médico</p>
+                              <p className={`text-lg font-bold ${darkMode ? 'text-[#ff6b00]' : 'text-blue-600'}`}>#3</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
                     {/* Files Tab */}
                     <TabsContent value="files">
-                      <Card className="shadow-sm border-slate-200">
+                      <Card className={cardClasses}>
                         <CardHeader>
-                          <CardTitle>Archivos de Simulación</CardTitle>
-                          <CardDescription>Archivos para Quantum ESPRESSO, VASP y LAMMPS</CardDescription>
+                          <CardTitle className={darkMode ? 'text-white' : ''}>Archivos para Supercomputadora</CardTitle>
+                          <CardDescription className={darkMode ? 'text-gray-400' : ''}>
+                            Quantum ESPRESSO, VASP, LAMMPS - Listos para ejecutar
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
                           <Accordion type="single" collapsible className="space-y-2">
-                            <AccordionItem value="qe" className="border rounded-lg">
-                              <AccordionTrigger className="px-4">Quantum ESPRESSO Input</AccordionTrigger>
+                            {/* Quantum ESPRESSO */}
+                            <AccordionItem value="qe" className={`border rounded-lg ${darkMode ? 'border-[#333]' : ''}`}>
+                              <AccordionTrigger className="px-4">
+                                <div className="flex items-center gap-2">
+                                  <Atom className="w-5 h-5 text-blue-500" />
+                                  <span>Quantum ESPRESSO Input</span>
+                                  <Badge variant="secondary" className="ml-2">SCF</Badge>
+                                </div>
+                              </AccordionTrigger>
                               <AccordionContent className="px-4">
-                                <pre className="bg-slate-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
+                                <pre className={`p-4 rounded-lg overflow-x-auto text-sm ${darkMode ? 'bg-[#0a0a0a]' : 'bg-slate-900'} text-green-400`}>
 {`&CONTROL
   calculation = 'scf'
   prefix = '${selectedMetal}O2'
   outdir = './tmp'
+  pseudo_dir = './pseudo'
 /
 
 &SYSTEM
@@ -964,14 +1497,18 @@ export default function CosmicForgeLab() {
   ntyp = 2
   ecutwfc = 60.0
   ecutrho = 480.0
+  occupations = 'smearing'
+  smearing = 'mp'
+  degauss = 0.02
 /
 
 &ELECTRONS
   conv_thr = 1.0d-8
+  mixing_beta = 0.7
 /
 
 ATOMIC_SPECIES
- ${selectedMetal} ${ELEMENTS_DATABASE[selectedMetal]?.mw || 50}.00 Ti.pbe-spn-kjpaw_psl.1.0.0.UPF
+ ${selectedMetal} ${ELEMENTS_DATABASE[selectedMetal]?.mw || 50}.00 ${selectedMetal}.pbe-spn-kjpaw_psl.1.0.0.UPF
  O  15.999 O.pbe-n-kjpaw_psl.1.0.0.UPF
 
 ATOMIC_POSITIONS crystal
@@ -980,15 +1517,26 @@ ATOMIC_POSITIONS crystal
  O -0.305 -0.305 0.000
 
 K_POINTS automatic
- 4 4 4 0 0 0`}
+ 6 6 6 0 0 0`}
                                 </pre>
+                                <Button size="sm" className="mt-2" style={darkMode ? { backgroundColor: '#ff6b00' } : {}}>
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Descargar .in
+                                </Button>
                               </AccordionContent>
                             </AccordionItem>
 
-                            <AccordionItem value="vasp" className="border rounded-lg">
-                              <AccordionTrigger className="px-4">VASP POSCAR</AccordionTrigger>
+                            {/* VASP */}
+                            <AccordionItem value="vasp" className={`border rounded-lg ${darkMode ? 'border-[#333]' : ''}`}>
+                              <AccordionTrigger className="px-4">
+                                <div className="flex items-center gap-2">
+                                  <Atom className="w-5 h-5 text-purple-500" />
+                                  <span>VASP POSCAR</span>
+                                  <Badge variant="secondary" className="ml-2">Struct</Badge>
+                                </div>
+                              </AccordionTrigger>
                               <AccordionContent className="px-4">
-                                <pre className="bg-slate-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
+                                <pre className={`p-4 rounded-lg overflow-x-auto text-sm ${darkMode ? 'bg-[#0a0a0a]' : 'bg-slate-900'} text-green-400`}>
 {`${selectedMetal}O2 - Generated by CosmicForge Lab
 1.0
    4.593700 0.000000 0.000000
@@ -1001,14 +1549,27 @@ Direct
  0.305000 0.305000 0.000000 O
 -0.305000 -0.305000 0.000000 O`}
                                 </pre>
+                                <Button size="sm" className="mt-2" style={darkMode ? { backgroundColor: '#ff6b00' } : {}}>
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Descargar POSCAR
+                                </Button>
                               </AccordionContent>
                             </AccordionItem>
 
-                            <AccordionItem value="lammps" className="border rounded-lg">
-                              <AccordionTrigger className="px-4">LAMMPS Input</AccordionTrigger>
+                            {/* LAMMPS */}
+                            <AccordionItem value="lammps" className={`border rounded-lg ${darkMode ? 'border-[#333]' : ''}`}>
+                              <AccordionTrigger className="px-4">
+                                <div className="flex items-center gap-2">
+                                  <Activity className="w-5 h-5 text-green-500" />
+                                  <span>LAMMPS Input</span>
+                                  <Badge variant="secondary" className="ml-2">MD</Badge>
+                                </div>
+                              </AccordionTrigger>
                               <AccordionContent className="px-4">
-                                <pre className="bg-slate-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
+                                <pre className={`p-4 rounded-lg overflow-x-auto text-sm ${darkMode ? 'bg-[#0a0a0a]' : 'bg-slate-900'} text-green-400`}>
 {`# LAMMPS input for ${selectedMetal}O2 - CosmicForge Lab
+# Molecular Dynamics Simulation
+
 units metal
 dimension 3
 boundary p p p
@@ -1026,11 +1587,76 @@ pair_coeff 1 1 0.001 0.1 0.0
 pair_coeff 2 2 0.001 0.1 0.0
 pair_coeff 1 2 0.001 0.2 0.0
 
+kspace_style pppm 1.0e-4
+
 timestep 0.001
 thermo 100
 
+# Minimization
 minimize 1.0e-4 1.0e-6 100 1000
-run 1000`}
+
+# NVT equilibration
+velocity all create 300 12345
+fix 1 all nvt temp 300 300 0.1
+run 10000
+
+# Production run
+run 50000`}
+                                </pre>
+                                <Button size="sm" className="mt-2" style={darkMode ? { backgroundColor: '#ff6b00' } : {}}>
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Descargar .in
+                                </Button>
+                              </AccordionContent>
+                            </AccordionItem>
+
+                            {/* Band structure */}
+                            <AccordionItem value="bands" className={`border rounded-lg ${darkMode ? 'border-[#333]' : ''}`}>
+                              <AccordionTrigger className="px-4">
+                                <div className="flex items-center gap-2">
+                                  <LineChart className="w-5 h-5 text-cyan-500" />
+                                  <span>Band Structure Input</span>
+                                  <Badge variant="secondary" className="ml-2">Bands</Badge>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="px-4">
+                                <pre className={`p-4 rounded-lg overflow-x-auto text-sm ${darkMode ? 'bg-[#0a0a0a]' : 'bg-slate-900'} text-green-400`}>
+{`&CONTROL
+  calculation = 'bands'
+  prefix = '${selectedMetal}O2'
+  outdir = './tmp'
+/
+
+&SYSTEM
+  ibrav = 1
+  celldm(1) = 8.0
+  nat = 3
+  ntyp = 2
+  ecutwfc = 60.0
+  ecutrho = 480.0
+  nbnd = 20
+/
+
+&ELECTRONS
+  conv_thr = 1.0d-8
+/
+
+ATOMIC_SPECIES
+ ${selectedMetal} ${ELEMENTS_DATABASE[selectedMetal]?.mw || 50}.00 ${selectedMetal}.pbe-spn-kjpaw_psl.1.0.0.UPF
+ O  15.999 O.pbe-n-kjpaw_psl.1.0.0.UPF
+
+ATOMIC_POSITIONS crystal
+ ${selectedMetal} 0.000 0.000 0.000
+ O  0.305 0.305 0.000
+ O -0.305 -0.305 0.000
+
+K_POINTS crystal
+5
+  0.0  0.0  0.0  20  ! Gamma
+  0.5  0.0  0.0  20  ! X
+  0.5  0.5  0.0  20  ! M
+  0.0  0.0  0.5  20  ! Z
+  0.0  0.0  0.0  1   ! Gamma`}
                                 </pre>
                               </AccordionContent>
                             </AccordionItem>
@@ -1041,40 +1667,35 @@ run 1000`}
 
                     {/* PDF Tab */}
                     <TabsContent value="pdf">
-                      <Card className="shadow-sm border-slate-200">
+                      <Card className={cardClasses}>
                         <CardHeader>
-                          <CardTitle>Generar Reporte PDF</CardTitle>
+                          <CardTitle className={darkMode ? 'text-white' : ''}>Generar Reporte Completo</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <p className="text-slate-600">
-                            Genera un reporte técnico completo en formato PDF que incluye:
+                          <p className={darkMode ? 'text-gray-400' : 'text-slate-600'}>
+                            Genera un reporte técnico completo que incluye:
                           </p>
                           <ul className="space-y-2 text-sm">
-                            <li className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                              Información del objeto astrofísico
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                              Propiedades calculadas del material
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                              Guía de producción detallada
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                              Lista de equipamiento y precursores
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                              Reflexión filosófica (Yu. I. Manin)
-                            </li>
+                            {[
+                              'Información del objeto astrofísico',
+                              'Propiedades calculadas del material',
+                              'Resultados de simulación de condiciones extremas',
+                              'Resultados de optimización',
+                              'Resultados de cálculo DFT',
+                              'Comparación con materiales comerciales',
+                              'Archivos de simulación adjuntos',
+                              'Reflexión filosófica (Yu. I. Manin)'
+                            ].map((item, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <CheckCircle2 className={`w-4 h-4 ${darkMode ? 'text-[#ff6b00]' : 'text-green-500'}`} />
+                                <span className={darkMode ? 'text-gray-300' : ''}>{item}</span>
+                              </li>
+                            ))}
                           </ul>
 
-                          <Button onClick={downloadPDF} size="lg" className="w-full">
+                          <Button onClick={downloadPDF} size="lg" className="w-full" style={darkMode ? { backgroundColor: '#ff6b00' } : {}}>
                             <Download className="w-4 h-4 mr-2" />
-                            Descargar PDF
+                            Descargar Reporte Completo
                           </Button>
                         </CardContent>
                       </Card>
@@ -1083,23 +1704,24 @@ run 1000`}
                 )}
               </>
             ) : (
-              <Card className="shadow-sm border-slate-200">
+              <Card className={cardClasses}>
                 <CardContent className="py-16 text-center">
                   <div className="max-w-md mx-auto">
-                    <Atom className="w-16 h-16 mx-auto text-blue-500 mb-4" />
-                    <h2 className="text-xl font-semibold mb-2">Bienvenido a CosmicForge Lab</h2>
-                    <p className="text-slate-500 mb-6">
-                      Selecciona un objeto astrofísico de la base de datos o ingresa parámetros 
-                      manuales para comenzar a diseñar materiales inspirados en firmas cósmicas.
+                    <Atom className={`w-16 h-16 mx-auto mb-4 ${darkMode ? 'text-[#ff6b00]' : 'text-blue-500'}`} />
+                    <h2 className={`text-xl font-semibold mb-2 ${darkMode ? 'text-white' : ''}`}>
+                      Bienvenido a CosmicForge Lab
+                    </h2>
+                    <p className={`${darkMode ? 'text-gray-400' : 'text-slate-500'} mb-6`}>
+                      Selecciona un objeto astrofísico para comenzar a diseñar materiales.
                     </p>
-                    <div className="flex items-center justify-center gap-4 text-sm text-slate-400">
+                    <div className={`flex items-center justify-center gap-4 text-sm ${darkMode ? 'text-gray-500' : 'text-slate-400'}`}>
                       <span className="flex items-center gap-1">
                         <Database className="w-4 h-4" />
-                        10 ejemplos
+                        15 ejemplos
                       </span>
                       <span className="flex items-center gap-1">
                         <Beaker className="w-4 h-4" />
-                        12 metales
+                        15 metales
                       </span>
                       <span className="flex items-center gap-1">
                         <FlaskConical className="w-4 h-4" />
@@ -1114,13 +1736,15 @@ run 1000`}
         </div>
 
         {/* Footer Quote */}
-        <Card className="mt-8 shadow-sm border-slate-200 bg-gradient-to-r from-rose-50 to-pink-50">
+        <Card className={`mt-8 ${darkMode ? 'bg-gradient-to-r from-[#1a1a1a] to-[#222] border-[#333]' : 'bg-gradient-to-r from-rose-50 to-pink-50'}`}>
           <CardContent className="py-6">
             <div className="flex items-start gap-4">
-              <BookOpen className="w-8 h-8 text-rose-500 flex-shrink-0" />
+              <BookOpen className={`w-8 h-8 flex-shrink-0 ${darkMode ? 'text-[#ff6b00]' : 'text-rose-500'}`} />
               <div>
-                <p className="italic text-slate-700">"{randomQuote}"</p>
-                <p className="text-sm text-slate-500 mt-2">— Yuri I. Manin, "Lo demostrable e indemostrable"</p>
+                <p className={`italic ${darkMode ? 'text-gray-300' : 'text-slate-700'}`}>"{randomQuote}"</p>
+                <p className={`text-sm mt-2 ${darkMode ? 'text-gray-500' : 'text-slate-500'}`}>
+                  — Yuri I. Manin, "Lo demostrable e indemostrable"
+                </p>
               </div>
             </div>
           </CardContent>
@@ -1128,13 +1752,13 @@ run 1000`}
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-800 text-slate-300 py-6 mt-8">
+      <footer className={`${darkMode ? 'bg-[#0a0a0a] border-[#333]' : 'bg-slate-800'} text-slate-300 py-6 mt-8 border-t`}>
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-sm">
-            CosmicForge Lab v3.1 — Diseño de Materiales Inspirado en Firmas Astrofísicas
+            CosmicForge Lab v3.5 NASA Edition — Diseño de Materiales Inspirado en Firmas Astrofísicas
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            Edición Personal — Uso Exclusivo
+            Edición Personal — Simulación | DFT | Optimización | Comparación
           </p>
         </div>
       </footer>
