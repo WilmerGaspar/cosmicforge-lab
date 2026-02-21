@@ -1,5 +1,5 @@
-# CosmicForge Lab - Requirements
-# Versión 2.0 - Código mejorado y corregido
+# CosmicForge Lab Pro - Requirements
+# Versión 3.0 - Professional Edition
 
 # Framework web
 streamlit>=1.41.0
@@ -9,6 +9,7 @@ numpy>=1.26.0
 
 # Visualizaciones
 matplotlib>=3.9.0
+plotly>=5.18.0
 
 # Manejo de datos
 pandas>=2.2.0
@@ -16,3 +17,10 @@ scipy>=1.13.0
 
 # Imágenes
 Pillow>=10.3.0
+
+# PDF Generation
+reportlab>=4.0.0
+
+# Opcional: para funcionalidades avanzadas
+# ase>=3.22  # Atomic Simulation Environment
+# pymatgen>=2024.1  # Materials analysis
