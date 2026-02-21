@@ -1,0 +1,22 @@
+# CosmicForge Lab - Requirements
+# Version 3.1 - Edicion Personal Mejorada
+
+# Framework web
+streamlit>=1.41.0
+
+# Calculos numericos
+numpy>=1.26.0
+
+# Visualizaciones
+matplotlib>=3.9.0
+plotly>=5.18.0
+
+# Manejo de datos
+pandas>=2.2.0
+scipy>=1.13.0
+
+# Imagenes
+Pillow>=10.3.0
+
+# PDF Generation (fpdf2 es mas confiable)
+fpdf2>=2.7.0
