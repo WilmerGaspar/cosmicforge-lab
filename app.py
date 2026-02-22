@@ -6,7 +6,7 @@ Versión 3.6 - Edición NASA con DFT y Simulación Espacial
 Autor: Wilmer Gaspar
 Repositorio: https://github.com/WilmerGaspar/cosmicforge-lab
 
-NUEVO EN v3.7:
+NUEVO EN v3.8:
 - Simulación de condiciones extremas (vacío, radiación, microgravedad, ciclos térmicos)
 - Optimización con algoritmo genético
 - Cálculo DFT simulado (Quantum ESPRESSO)
@@ -914,182 +914,121 @@ def create_pdf_report(astro_data, physical_props, recipe, production_guide, simu
     
     try:
         from fpdf import FPDF
+        import io
         
         class PDF(FPDF):
             def header(self):
-                self.set_font('Arial', 'B', 10)
-                self.set_text_color(255, 107, 0)
-                self.cell(0, 10, 'CosmicForge Lab v3.7 NASA Edition', 0, 1, 'C')
+                self.set_font('Helvetica', 'B', 10)
+                self.cell(0, 10, 'CosmicForge Lab v3.8', 0, 1, 'C')
                 self.ln(2)
             
             def footer(self):
                 self.set_y(-15)
-                self.set_font('Arial', 'I', 8)
-                self.set_text_color(128, 128, 128)
+                self.set_font('Helvetica', 'I', 8)
                 self.cell(0, 10, f'Pagina {self.page_no()}', 0, 0, 'C')
         
         pdf = PDF()
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=15)
         
+        def safe_text(text):
+            """Limpia texto para PDF"""
+            if text is None:
+                return "N/A"
+            text = str(text)
+            # Remover caracteres problemáticos
+            text = text.encode('latin-1', 'replace').decode('latin-1')
+            return text
+        
         # Título
-        pdf.set_font('Arial', 'B', 24)
-        pdf.set_text_color(255, 107, 0)
+        pdf.set_font('Helvetica', 'B', 20)
         pdf.cell(0, 15, 'COSMICFORGE LAB', 0, 1, 'C')
-        pdf.set_font('Arial', '', 12)
-        pdf.set_text_color(128, 128, 128)
-        pdf.cell(0, 8, 'Informe Tecnico Completo - NASA Edition', 0, 1, 'C')
+        pdf.set_font('Helvetica', '', 12)
+        pdf.cell(0, 8, 'Informe Tecnico - NASA Edition', 0, 1, 'C')
         pdf.ln(10)
         
         # Información general
-        pdf.set_font('Arial', 'B', 14)
-        pdf.set_text_color(255, 140, 0)
+        pdf.set_font('Helvetica', 'B', 14)
         pdf.cell(0, 10, 'INFORMACION GENERAL', 0, 1)
-        pdf.set_font('Arial', '', 11)
-        pdf.set_text_color(0, 0, 0)
-        pdf.cell(0, 8, f"Objeto Astrofisico: {astro_data.get('object_name', 'Unknown')}", 0, 1)
+        pdf.set_font('Helvetica', '', 11)
+        pdf.cell(0, 8, f"Objeto Astrofisico: {safe_text(astro_data.get('object_name', 'Unknown'))}", 0, 1)
         pdf.cell(0, 8, f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 0, 1)
-        pdf.cell(0, 8, f"Material: {recipe.get('metal', 'Ti')}-O ({recipe.get('material_type', 'Oxido')})", 0, 1)
+        pdf.cell(0, 8, f"Material: {safe_text(recipe.get('metal', 'Ti'))}-O", 0, 1)
         pdf.ln(5)
         
         # Propiedades
-        pdf.set_font('Arial', 'B', 14)
-        pdf.set_text_color(255, 140, 0)
+        pdf.set_font('Helvetica', 'B', 14)
         pdf.cell(0, 10, 'PROPIEDADES DEL MATERIAL', 0, 1)
-        pdf.set_font('Arial', '', 11)
-        pdf.set_text_color(0, 0, 0)
+        pdf.set_font('Helvetica', '', 11)
         
         props = [
-            f"Porosidad: {physical_props.get('porosity', 0):.2%}",
+            f"Porosidad: {physical_props.get('porosity', 0)*100:.1f}%",
             f"Densidad: {physical_props.get('density', 0):.3f} g/cm3",
             f"Conductividad Termica: {physical_props.get('thermal_conductivity', 0):.2f} W/mK",
             f"Modulo Elastico: {physical_props.get('elastic_modulus', 0):.2f} GPa",
             f"Area Superficial: {physical_props.get('surface_area', 0):.1f} m2/g",
             f"Band Gap: {physical_props.get('band_gap', 0):.3f} eV",
-            f"Calidad: {physical_props.get('quality_score', 0):.1%}"
+            f"Calidad: {physical_props.get('quality_score', 0)*100:.1f}%"
         ]
         
         for prop in props:
             pdf.cell(0, 7, f"  - {prop}", 0, 1)
         pdf.ln(5)
         
-        # Simulación (si existe)
-        if simulation:
-            pdf.set_font('Arial', 'B', 14)
-            pdf.set_text_color(255, 140, 0)
-            pdf.cell(0, 10, 'SIMULACION DE CONDICIONES EXTREMAS', 0, 1)
-            pdf.set_font('Arial', '', 11)
-            pdf.set_text_color(0, 0, 0)
-            
-            pdf.cell(0, 7, f"  - Estabilidad en Vacio: {simulation.get('vacuum_stability', 0):.1%}", 0, 1)
-            pdf.cell(0, 7, f"  - Degradacion Radiacion: {simulation.get('radiation_degradation', 0):.1%}", 0, 1)
-            pdf.cell(0, 7, f"  - Efecto Microgravedad: {simulation.get('microgravity_effect', 0):.1%}", 0, 1)
-            pdf.cell(0, 7, f"  - Vida Ciclos Termicos: {simulation.get('thermal_cycle_life', 0)}", 0, 1)
-            pdf.cell(0, 7, f"  - Vida Util Estimada: {simulation.get('estimated_lifetime', 'N/A')}", 0, 1)
-            pdf.ln(3)
-            
-            pdf.set_font('Arial', 'B', 12)
-            pdf.cell(0, 8, 'Recomendaciones:', 0, 1)
-            pdf.set_font('Arial', '', 10)
-            for rec in simulation.get('recommendations', []):
-                pdf.multi_cell(0, 6, f"  {rec}")
-            pdf.ln(5)
-        
-        # Optimización (si existe)
-        if optimization:
-            pdf.set_font('Arial', 'B', 14)
-            pdf.set_text_color(255, 140, 0)
-            pdf.cell(0, 10, 'OPTIMIZACION (ALGORITMO GENETICO)', 0, 1)
-            pdf.set_font('Arial', '', 11)
-            pdf.set_text_color(0, 0, 0)
-            
-            pdf.cell(0, 7, f"  - Mejor Composicion: {optimization.get('best_composition', 'N/A')}", 0, 1)
-            pdf.cell(0, 7, f"  - Score: {optimization.get('score', 0):.2%}", 0, 1)
-            pdf.cell(0, 7, f"  - Generaciones: {optimization.get('generations', 0)}", 0, 1)
-            params = optimization.get('parameters', {})
-            pdf.cell(0, 7, f"  - Temperatura Optima: {params.get('temp', 0)}C", 0, 1)
-            pdf.cell(0, 7, f"  - Tiempo Optimo: {params.get('time', 0)}h", 0, 1)
-            pdf.cell(0, 7, f"  - pH Optimo: {params.get('ph', 0)}", 0, 1)
-            pdf.ln(5)
-        
-        # DFT (si existe)
-        if dft:
-            pdf.set_font('Arial', 'B', 14)
-            pdf.set_text_color(255, 140, 0)
-            pdf.cell(0, 10, 'CALCULO DFT (QUANTUM ESPRESSO)', 0, 1)
-            pdf.set_font('Arial', '', 11)
-            pdf.set_text_color(0, 0, 0)
-            
-            stability = "ESTABLE" if dft.get('is_stable', False) else "INESTABLE"
-            pdf.cell(0, 7, f"  - Energia Total: {dft.get('total_energy', 0):.4f} Ry", 0, 1)
-            pdf.cell(0, 7, f"  - Band Gap: {dft.get('band_gap', 0):.4f} eV", 0, 1)
-            pdf.cell(0, 7, f"  - Celda Optimizada: {dft.get('optimized_lattice', 0):.4f} A", 0, 1)
-            pdf.cell(0, 7, f"  - Energia de Fermi: {dft.get('fermi_energy', 0):.4f} eV", 0, 1)
-            pdf.cell(0, 7, f"  - Estado: {stability}", 0, 1)
-            pdf.cell(0, 7, f"  - Tiempo de Calculo: {dft.get('calculation_time', 'N/A')}", 0, 1)
-            pdf.ln(5)
-        
         # Proceso de producción
-        pdf.set_font('Arial', 'B', 14)
-        pdf.set_text_color(255, 140, 0)
+        pdf.set_font('Helvetica', 'B', 14)
         pdf.cell(0, 10, 'PROCESO DE PRODUCCION', 0, 1)
-        pdf.set_font('Arial', '', 10)
-        pdf.set_text_color(0, 0, 0)
+        pdf.set_font('Helvetica', '', 10)
         
         if production_guide:
             for step in production_guide.get('synthesis', []):
                 if step.strip():
-                    step_clean = step.encode('latin-1', 'replace').decode('latin-1')
-                    pdf.multi_cell(0, 6, f"  {step_clean}")
+                    pdf.multi_cell(0, 6, f"  {safe_text(step)}")
         pdf.ln(5)
         
-        # Nueva página para conclusión
+        # Nueva página
         pdf.add_page()
         
-        # Conclusión filosófica
-        pdf.set_font('Arial', 'B', 14)
-        pdf.set_text_color(255, 140, 0)
+        # Conclusión
+        pdf.set_font('Helvetica', 'B', 14)
         pdf.cell(0, 10, 'REFLEXION CIENTIFICA', 0, 1)
         
         quote = MANIN_QUOTES[hash(astro_data.get('object_name', '')) % len(MANIN_QUOTES)]
-        pdf.set_font('Arial', 'I', 11)
-        pdf.set_text_color(0, 0, 0)
-        pdf.multi_cell(0, 7, f'"{quote}"')
-        pdf.set_font('Arial', '', 10)
-        pdf.cell(0, 8, '- Yuri I. Manin, "Lo demostrable e indemostrable"', 0, 1, 'R')
-        pdf.ln(10)
+        pdf.set_font('Helvetica', 'I', 11)
+        pdf.multi_cell(0, 7, f'"{safe_text(quote)}"')
+        pdf.set_font('Helvetica', '', 10)
+        pdf.cell(0, 8, '- Yuri I. Manin', 0, 1, 'R')
         
         # Footer
         pdf.ln(20)
-        pdf.set_font('Arial', 'I', 9)
-        pdf.set_text_color(128, 128, 128)
-        pdf.cell(0, 8, 'Generado por CosmicForge Lab v3.7 NASA Edition', 0, 1, 'C')
+        pdf.set_font('Helvetica', 'I', 9)
+        pdf.cell(0, 8, 'Generado por CosmicForge Lab v3.8', 0, 1, 'C')
         
-        return pdf.output(dest='S').encode('latin-1')
+        # Retornar bytes
+        output = io.BytesIO()
+        pdf.output(output)
+        return output.getvalue()
         
     except Exception as e:
         # Fallback: crear texto simple
-        report_text = f"""
-COSMICFORGE LAB v3.7 NASA EDITION - INFORME TECNICO
-================================================
+        report = f"""
+COSMICFORGE LAB v3.8 - INFORME TECNICO
+========================================
 
 Objeto Astrofisico: {astro_data.get('object_name', 'Unknown')}
 Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 Material: {recipe.get('metal', 'Ti')}-O
 
 PROPIEDADES:
-- Porosidad: {physical_props.get('porosity', 0):.2%}
+- Porosidad: {physical_props.get('porosity', 0)*100:.1f}%
 - Densidad: {physical_props.get('density', 0):.3f} g/cm3
 - Conductividad: {physical_props.get('thermal_conductivity', 0):.2f} W/mK
 - Modulo Elastico: {physical_props.get('elastic_modulus', 0):.2f} GPa
 
-PROCESO DE PRODUCCION:
-{chr(10).join(production_guide.get('synthesis', []))}
-
----
 Generado por CosmicForge Lab
 """
-        return report_text.encode('utf-8')
+        return report.encode('utf-8')
+
 
 # ============================================================================
 # VISUALIZACIÓN 3D
@@ -1265,7 +1204,7 @@ st.title("🚀 CosmicForge Lab")
 st.markdown("<p style='text-align:center; color:#888; font-size:18px;'>Diseño de Materiales Inspirado en Firmas Astrofísicas</p>", unsafe_allow_html=True)
 
 # Versión
-st.markdown("<p style='text-align:right; color:#ff6b00; font-size:12px;'>v3.7 NASA Edition</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:right; color:#ff6b00; font-size:12px;'>v3.8 NASA Edition</p>", unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.header("📥 Importar Datos")
@@ -2220,7 +2159,7 @@ st.markdown(f"""
 # Footer
 st.markdown("""
 <div class='footer'>
-    <p>🚀 CosmicForge Lab v3.7 NASA Edition</p>
+    <p>🚀 CosmicForge Lab v3.8 NASA Edition</p>
     <p style='font-size: 12px;'>Exportación: VASP | LAMMPS | Quantum ESPRESSO | Scripts Python</p>
 </div>
 """, unsafe_allow_html=True)
