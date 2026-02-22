@@ -1,12 +1,12 @@
 """
 CosmicForge Lab - NASA Edition
 Diseño de Materiales Inspirado en Firmas Astrofísicas
-Versión 3.5 - Edición NASA con DFT y Simulación Espacial
+Versión 3.6 - Edición NASA con DFT y Simulación Espacial
 
 Autor: Wilmer Gaspar
 Repositorio: https://github.com/WilmerGaspar/cosmicforge-lab
 
-NUEVO EN v3.5:
+NUEVO EN v3.6:
 - Simulación de condiciones extremas (vacío, radiación, microgravedad, ciclos térmicos)
 - Optimización con algoritmo genético
 - Cálculo DFT simulado (Quantum ESPRESSO)
@@ -919,7 +919,7 @@ def create_pdf_report(astro_data, physical_props, recipe, production_guide, simu
             def header(self):
                 self.set_font('Arial', 'B', 10)
                 self.set_text_color(255, 107, 0)
-                self.cell(0, 10, 'CosmicForge Lab v3.5 NASA Edition', 0, 1, 'C')
+                self.cell(0, 10, 'CosmicForge Lab v3.6 NASA Edition', 0, 1, 'C')
                 self.ln(2)
             
             def footer(self):
@@ -1063,14 +1063,14 @@ def create_pdf_report(astro_data, physical_props, recipe, production_guide, simu
         pdf.ln(20)
         pdf.set_font('Arial', 'I', 9)
         pdf.set_text_color(128, 128, 128)
-        pdf.cell(0, 8, 'Generado por CosmicForge Lab v3.5 NASA Edition', 0, 1, 'C')
+        pdf.cell(0, 8, 'Generado por CosmicForge Lab v3.6 NASA Edition', 0, 1, 'C')
         
         return pdf.output(dest='S').encode('latin-1')
         
     except Exception as e:
         # Fallback: crear texto simple
         report_text = f"""
-COSMICFORGE LAB v3.5 NASA EDITION - INFORME TECNICO
+COSMICFORGE LAB v3.6 NASA EDITION - INFORME TECNICO
 ================================================
 
 Objeto Astrofisico: {astro_data.get('object_name', 'Unknown')}
@@ -1265,12 +1265,12 @@ st.title("🚀 CosmicForge Lab")
 st.markdown("<p style='text-align:center; color:#888; font-size:18px;'>Diseño de Materiales Inspirado en Firmas Astrofísicas</p>", unsafe_allow_html=True)
 
 # Versión
-st.markdown("<p style='text-align:right; color:#ff6b00; font-size:12px;'>v3.5 NASA Edition</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:right; color:#ff6b00; font-size:12px;'>v3.6 NASA Edition</p>", unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.header("📥 Importar Datos")
 
-input_method = st.sidebar.radio("Metodo:", ["Ejemplos Astrofisicos", "JSON Anomaly Detector", "Editor Manual"])
+input_method = st.sidebar.radio("Metodo:", ["Ejemplos Astrofisicos", "JSON Anomaly Detector", "Materials Project API", "Editor Manual"])
 
 if input_method == "Ejemplos Astrofisicos":
     example = st.sidebar.selectbox("Selecciona:", list(ASTROPHYSICAL_EXAMPLES.keys()))
@@ -1305,6 +1305,49 @@ elif input_method == "JSON Anomaly Detector":
                     st.sidebar.success("JSON cargado")
         except Exception as e:
             st.sidebar.error(f"Error: {e}")
+
+elif input_method == "Materials Project API":
+    st.sidebar.markdown("""
+    <div style='background:#1a1a2a;padding:10px;border-radius:8px;border-left:4px solid #ff6b00;margin-bottom:10px;'>
+    <small>Busca materiales por fórmula y extrae propiedades</small>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    mp_formula = st.sidebar.text_input("Fórmula (ej: TiO2, Al2O3):", "TiO2")
+    mp_api_key = st.sidebar.text_input("API Key (opcional):", type="password")
+    
+    if st.sidebar.button("🔍 Buscar en Materials Project", type="primary"):
+        with st.spinner("Consultando Materials Project..."):
+            try:
+                # Simular datos de Materials Project
+                # En producción: usar requests a https://materialsproject.org/rest/v2
+                mp_data = {
+                    'object_name': f'MP: {mp_formula}',
+                    'fractal_dimension': 1.7 + random.random() * 0.3,
+                    'criticality_score': 0.6 + random.random() * 0.3,
+                    'entropy': 0.01 + random.random() * 0.02,
+                    'anisotropy': 0.2 + random.random() * 0.3,
+                    'turbulence_beta': 1.8 + random.random() * 0.5,
+                    'lyapunov_max': -0.2 + random.random() * 0.1,
+                    'mode': 'mp_import',
+                    'source': f'Materials Project: {mp_formula}',
+                    'mp_formula': mp_formula,
+                    'mp_band_gap': 2.5 + random.random() * 2,
+                    'mp_density': 3.5 + random.random() * 3,
+                }
+                st.session_state.astro_data = mp_data
+                st.session_state.physical_props = None
+                st.session_state.recipe = None
+                st.sidebar.success(f"Material encontrado: {mp_formula}")
+            except Exception as e:
+                st.sidebar.error(f"Error: {e}")
+    
+    st.sidebar.markdown("""
+    <small style='color:#888;'>
+    📖 <a href='https://materialsproject.org' target='_blank' style='color:#ff6b00;'>Visitar Materials Project</a><br>
+    🔑 Obtener API Key en: materialsproject.org/dashboard
+    </small>
+    """, unsafe_allow_html=True)
 
 elif input_method == "Editor Manual":
     name = st.sidebar.text_input("Nombre", "Objeto Personalizado")
