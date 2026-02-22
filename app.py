@@ -6,7 +6,7 @@ Versión 3.6 - Edición NASA con DFT y Simulación Espacial
 Autor: Wilmer Gaspar
 Repositorio: https://github.com/WilmerGaspar/cosmicforge-lab
 
-NUEVO EN v3.8:
+NUEVO EN v3.9:
 - Simulación de condiciones extremas (vacío, radiación, microgravedad, ciclos térmicos)
 - Optimización con algoritmo genético
 - Cálculo DFT simulado (Quantum ESPRESSO)
@@ -914,74 +914,56 @@ def create_pdf_report(astro_data, physical_props, recipe, production_guide, simu
     
     try:
         from fpdf import FPDF
-        import io
-        
-        class PDF(FPDF):
-            def header(self):
-                self.set_font('Helvetica', 'B', 10)
-                self.cell(0, 10, 'CosmicForge Lab v3.8', 0, 1, 'C')
-                self.ln(2)
-            
-            def footer(self):
-                self.set_y(-15)
-                self.set_font('Helvetica', 'I', 8)
-                self.cell(0, 10, f'Pagina {self.page_no()}', 0, 0, 'C')
-        
-        pdf = PDF()
-        pdf.add_page()
-        pdf.set_auto_page_break(auto=True, margin=15)
         
         def safe_text(text):
             """Limpia texto para PDF"""
             if text is None:
                 return "N/A"
             text = str(text)
-            # Remover caracteres problemáticos
-            text = text.encode('latin-1', 'replace').decode('latin-1')
+            # Solo ASCII para evitar problemas
+            text = text.encode('ascii', 'replace').decode('ascii')
             return text
+        
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_auto_page_break(auto=True, margin=15)
         
         # Título
         pdf.set_font('Helvetica', 'B', 20)
         pdf.cell(0, 15, 'COSMICFORGE LAB', 0, 1, 'C')
         pdf.set_font('Helvetica', '', 12)
-        pdf.cell(0, 8, 'Informe Tecnico - NASA Edition', 0, 1, 'C')
+        pdf.cell(0, 8, 'Informe Tecnico', 0, 1, 'C')
         pdf.ln(10)
         
         # Información general
         pdf.set_font('Helvetica', 'B', 14)
         pdf.cell(0, 10, 'INFORMACION GENERAL', 0, 1)
         pdf.set_font('Helvetica', '', 11)
-        pdf.cell(0, 8, f"Objeto Astrofisico: {safe_text(astro_data.get('object_name', 'Unknown'))}", 0, 1)
+        pdf.cell(0, 8, f"Objeto: {safe_text(astro_data.get('object_name', 'Unknown'))}", 0, 1)
         pdf.cell(0, 8, f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 0, 1)
         pdf.cell(0, 8, f"Material: {safe_text(recipe.get('metal', 'Ti'))}-O", 0, 1)
         pdf.ln(5)
         
         # Propiedades
         pdf.set_font('Helvetica', 'B', 14)
-        pdf.cell(0, 10, 'PROPIEDADES DEL MATERIAL', 0, 1)
+        pdf.cell(0, 10, 'PROPIEDADES', 0, 1)
         pdf.set_font('Helvetica', '', 11)
         
-        props = [
-            f"Porosidad: {physical_props.get('porosity', 0)*100:.1f}%",
-            f"Densidad: {physical_props.get('density', 0):.3f} g/cm3",
-            f"Conductividad Termica: {physical_props.get('thermal_conductivity', 0):.2f} W/mK",
-            f"Modulo Elastico: {physical_props.get('elastic_modulus', 0):.2f} GPa",
-            f"Area Superficial: {physical_props.get('surface_area', 0):.1f} m2/g",
-            f"Band Gap: {physical_props.get('band_gap', 0):.3f} eV",
-            f"Calidad: {physical_props.get('quality_score', 0)*100:.1f}%"
-        ]
-        
-        for prop in props:
-            pdf.cell(0, 7, f"  - {prop}", 0, 1)
+        pdf.cell(0, 7, f"  - Porosidad: {physical_props.get('porosity', 0)*100:.1f}%", 0, 1)
+        pdf.cell(0, 7, f"  - Densidad: {physical_props.get('density', 0):.3f} g/cm3", 0, 1)
+        pdf.cell(0, 7, f"  - Conductividad: {physical_props.get('thermal_conductivity', 0):.2f} W/mK", 0, 1)
+        pdf.cell(0, 7, f"  - Modulo Elastico: {physical_props.get('elastic_modulus', 0):.2f} GPa", 0, 1)
+        pdf.cell(0, 7, f"  - Band Gap: {physical_props.get('band_gap', 0):.3f} eV", 0, 1)
+        pdf.cell(0, 7, f"  - Calidad: {physical_props.get('quality_score', 0)*100:.1f}%", 0, 1)
         pdf.ln(5)
         
-        # Proceso de producción
+        # Proceso
         pdf.set_font('Helvetica', 'B', 14)
         pdf.cell(0, 10, 'PROCESO DE PRODUCCION', 0, 1)
         pdf.set_font('Helvetica', '', 10)
         
         if production_guide:
-            for step in production_guide.get('synthesis', []):
+            for step in production_guide.get('synthesis', [])[:5]:
                 if step.strip():
                     pdf.multi_cell(0, 6, f"  {safe_text(step)}")
         pdf.ln(5)
@@ -991,9 +973,9 @@ def create_pdf_report(astro_data, physical_props, recipe, production_guide, simu
         
         # Conclusión
         pdf.set_font('Helvetica', 'B', 14)
-        pdf.cell(0, 10, 'REFLEXION CIENTIFICA', 0, 1)
+        pdf.cell(0, 10, 'REFLEXION', 0, 1)
         
-        quote = MANIN_QUOTES[hash(astro_data.get('object_name', '')) % len(MANIN_QUOTES)]
+        quote = MANIN_QUOTES[0]  # Usar la primera quote para evitar errores
         pdf.set_font('Helvetica', 'I', 11)
         pdf.multi_cell(0, 7, f'"{safe_text(quote)}"')
         pdf.set_font('Helvetica', '', 10)
@@ -1002,17 +984,15 @@ def create_pdf_report(astro_data, physical_props, recipe, production_guide, simu
         # Footer
         pdf.ln(20)
         pdf.set_font('Helvetica', 'I', 9)
-        pdf.cell(0, 8, 'Generado por CosmicForge Lab v3.8', 0, 1, 'C')
+        pdf.cell(0, 8, 'CosmicForge Lab v3.9', 0, 1, 'C')
         
-        # Retornar bytes
-        output = io.BytesIO()
-        pdf.output(output)
-        return output.getvalue()
+        # Retornar bytes del PDF
+        return pdf.output(dest='S').encode('latin-1')
         
     except Exception as e:
         # Fallback: crear texto simple
         report = f"""
-COSMICFORGE LAB v3.8 - INFORME TECNICO
+COSMICFORGE LAB v3.9 - INFORME TECNICO
 ========================================
 
 Objeto Astrofisico: {astro_data.get('object_name', 'Unknown')}
@@ -1204,7 +1184,7 @@ st.title("🚀 CosmicForge Lab")
 st.markdown("<p style='text-align:center; color:#888; font-size:18px;'>Diseño de Materiales Inspirado en Firmas Astrofísicas</p>", unsafe_allow_html=True)
 
 # Versión
-st.markdown("<p style='text-align:right; color:#ff6b00; font-size:12px;'>v3.8 NASA Edition</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:right; color:#ff6b00; font-size:12px;'>v3.9 NASA Edition</p>", unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.header("📥 Importar Datos")
@@ -2159,7 +2139,7 @@ st.markdown(f"""
 # Footer
 st.markdown("""
 <div class='footer'>
-    <p>🚀 CosmicForge Lab v3.8 NASA Edition</p>
+    <p>🚀 CosmicForge Lab v3.9 NASA Edition</p>
     <p style='font-size: 12px;'>Exportación: VASP | LAMMPS | Quantum ESPRESSO | Scripts Python</p>
 </div>
 """, unsafe_allow_html=True)
