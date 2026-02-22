@@ -1501,7 +1501,7 @@ if st.session_state.physical_props and st.session_state.recipe:
         st.subheader("🎯 Optimización con Algoritmo Genético")
         st.markdown("Encuentra la mejor composición y parámetros de síntesis mediante evolución artificial.")
         
-        if not st.session_state.optimimization:
+        if not st.session_state.optimization:
             st.markdown("""
             <div class='nasa-card'>
             <p>El algoritmo genético explorará múltiples combinaciones de:</p>
