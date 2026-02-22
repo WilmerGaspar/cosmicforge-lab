@@ -1638,32 +1638,497 @@ if st.session_state.physical_props and st.session_state.recipe:
             st.markdown("<div class='nasa-card text-center'><h4>🏥 Médico</h4><h2 style='color: #ff6b00;'>#3</h2></div>", unsafe_allow_html=True)
     
     with tabs[5]:  # Archivos
-        st.subheader("📁 Archivos para Supercomputadora")
-        st.markdown("Archivos listos para ejecutar en clúster de cómputo de alto rendimiento.")
+        st.subheader("📁 Exportación a Simuladores")
+        st.markdown("Archivos listos para ejecutar en supercomputadora")
         
-        # Quantum ESPRESSO
-        with st.expander("⚛️ Quantum ESPRESSO - SCF Input"):
-            qe_input = generate_qe_input(metal, pp)
-            st.code(qe_input, language='python')
-            st.download_button("📥 Descargar .in", qe_input, file_name=f"{metal}O2_scf.in")
+        # Sub-tabs para cada simulador
+        sim_tabs = st.tabs(["⚛️ Quantum ESPRESSO", "🔷 VASP", "🔧 LAMMPS", "🐍 Scripts Python"])
         
-        # VASP
-        with st.expander("🔷 VASP - POSCAR"):
-            vasp_input = generate_vasp_poscar(metal, pp)
-            st.code(vasp_input, language='python')
-            st.download_button("📥 Descargar POSCAR", vasp_input, file_name="POSCAR")
+        # ========== QUANTUM ESPRESSO ==========
+        with sim_tabs[0]:
+            st.markdown("### ⚛️ Quantum ESPRESSO (pw.x)")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                qe_calc_type = st.selectbox("Tipo de cálculo:", 
+                    ["scf", "vc-relax", "bands", "nscf"], key="qe_type")
+            with col2:
+                qe_ecut = st.number_input("Energía de corte (Ry):", value=60, min_value=20, max_value=200)
+            
+            # Generar archivos QE
+            st.markdown("#### 📄 pw.in - SCF")
+            qe_scf = f"""&CONTROL
+  calculation = '{qe_calc_type}'
+  prefix = '{metal}O2'
+  outdir = './tmp'
+  pseudo_dir = './pseudo'
+/
+
+&SYSTEM
+  ibrav = 1
+  celldm(1) = 8.0
+  nat = 3
+  ntyp = 2
+  ecutwfc = {qe_ecut}.0
+  ecutrho = {qe_ecut * 8}.0
+  occupations = 'smearing'
+  smearing = 'mp'
+  degauss = 0.02
+/
+
+&ELECTRONS
+  conv_thr = 1.0d-8
+  mixing_beta = 0.7
+/
+
+ATOMIC_SPECIES
+ {metal} {ELEMENTS_DATABASE.get(metal, {}).get('mw', 50):.3f} {metal}.pbe-spn-kjpaw_psl.1.0.0.UPF
+ O  15.999 O.pbe-n-kjpaw_psl.1.0.0.UPF
+
+ATOMIC_POSITIONS crystal
+ {metal} 0.000 0.000 0.000
+ O  0.305 0.305 0.000
+ O -0.305 -0.305 0.000
+
+K_POINTS automatic
+ 8 8 8 0 0 0
+"""
+            st.code(qe_scf, language="bash")
+            st.download_button("📥 Descargar pw.in", qe_scf, file_name=f"{metal}O2_pw.in")
+            
+            with st.expander("📊 bands.in - Estructura de Bandas"):
+                qe_bands = f"""&CONTROL
+  calculation = 'bands'
+  prefix = '{metal}O2'
+  outdir = './tmp'
+/
+
+&SYSTEM
+  ibrav = 1
+  celldm(1) = 8.0
+  nat = 3
+  ntyp = 2
+  ecutwfc = {qe_ecut}.0
+  ecutrho = {qe_ecut * 8}.0
+  nbnd = 20
+/
+
+&ELECTRONS
+  conv_thr = 1.0d-8
+/
+
+ATOMIC_SPECIES
+ {metal} {ELEMENTS_DATABASE.get(metal, {}).get('mw', 50):.3f} {metal}.pbe-spn-kjpaw_psl.1.0.0.UPF
+ O  15.999 O.pbe-n-kjpaw_psl.1.0.0.UPF
+
+ATOMIC_POSITIONS crystal
+ {metal} 0.000 0.000 0.000
+ O  0.305 0.305 0.000
+ O -0.305 -0.305 0.000
+
+K_POINTS crystal
+5
+  0.0  0.0  0.0  20  ! Gamma
+  0.5  0.0  0.0  20  ! X
+  0.5  0.5  0.0  20  ! M
+  0.0  0.0  0.5  20  ! Z
+  0.0  0.0  0.0  1   ! Gamma
+"""
+                st.code(qe_bands, language="bash")
+                st.download_button("📥 Descargar bands.in", qe_bands, file_name=f"{metal}O2_bands.in")
+            
+            with st.expander("📈 dos.in - Densidad de Estados"):
+                qe_dos = f"""&DOS
+  prefix = '{metal}O2'
+  outdir = './tmp'
+  fildos = '{metal}O2.dos'
+  Emin = -10.0
+  Emax = 10.0
+  DeltaE = 0.01
+/
+"""
+                st.code(qe_dos, language="bash")
+                st.download_button("📥 Descargar dos.in", qe_dos, file_name="dos.in")
+            
+            with st.expander("🎵 phonon.in - Fonones"):
+                qe_ph = f"""&INPUTPH
+  prefix = '{metal}O2'
+  outdir = './tmp'
+  fildyn = '{metal}O2.dyn'
+  ldisp = .true.
+  nq1 = 2
+  nq2 = 2
+  nq3 = 2
+/
+"""
+                st.code(qe_ph, language="bash")
+                st.download_button("📥 Descargar phonon.in", qe_ph, file_name="phonon.in")
+            
+            with st.expander("🚀 Script de ejecución"):
+                qe_run = f"""#!/bin/bash
+# Script Quantum ESPRESSO - {metal}O2
+# Generado por CosmicForge Lab
+
+module load quantum-espresso
+
+mkdir -p tmp pseudo
+
+# SCF
+mpirun -np 4 pw.x < {metal}O2_pw.in > {metal}O2_pw.out
+
+# Bandas (opcional)
+# mpirun -np 4 pw.x < {metal}O2_bands.in > {metal}O2_bands.out
+# mpirun -np 4 bands.x < bands_pp.in > bands.out
+# plotband.x
+
+# DOS (opcional)
+# mpirun -np 4 dos.x < dos.in > dos.out
+
+echo "Cálculo completado!"
+"""
+                st.code(qe_run, language="bash")
+                st.download_button("📥 Descargar run.sh", qe_run, file_name="run_qe.sh")
         
-        # LAMMPS
-        with st.expander("🔧 LAMMPS - Input"):
-            lammps_input = generate_lammps_input(metal, pp)
-            st.code(lammps_input, language='python')
-            st.download_button("📥 Descargar .in", lammps_input, file_name=f"{metal}O2_md.in")
+        # ========== VASP ==========
+        with sim_tabs[1]:
+            st.markdown("### 🔷 VASP (Vienna Ab initio Simulation Package)")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                vasp_calc = st.selectbox("Tipo:", ["scf", "relax", "bands", "md"], key="vasp_type")
+            with col2:
+                vasp_encut = st.number_input("ENCUT (eV):", value=520, min_value=200, max_value=1000)
+            
+            # POSCAR
+            st.markdown("#### 📄 POSCAR - Estructura Cristalina")
+            vasp_poscar = f"""{metal}O2 - Generated by CosmicForge Lab
+1.0
+   4.593700  0.000000  0.000000
+   0.000000  4.593700  0.000000
+   0.000000  0.000000  2.958700
+{metal}  O
+1  2
+Direct
+  0.000000  0.000000  0.000000  {metal}
+  0.305000  0.305000  0.000000  O
+ -0.305000 -0.305000  0.000000  O
+"""
+            st.code(vasp_poscar, language="bash")
+            st.download_button("📥 Descargar POSCAR", vasp_poscar, file_name="POSCAR")
+            
+            # INCAR
+            incar_templates = {
+                "scf": f"""# INCAR - {metal}O2 SCF Calculation
+# CosmicForge Lab
+
+SYSTEM = {metal}O2 - SCF
+ENCUT = {vasp_encut}
+EDIFF = 1.0e-6
+IBRION = -1
+ISMEAR = 0
+SIGMA = 0.05
+PREC = Accurate
+LREAL = .FALSE.
+ALGO = Normal
+""",
+                "relax": f"""# INCAR - {metal}O2 Relaxation
+# CosmicForge Lab
+
+SYSTEM = {metal}O2 - Relax
+ENCUT = {vasp_encut}
+EDIFF = 1.0e-6
+EDIFFG = -0.01
+IBRION = 2
+ISIF = 3
+NSW = 100
+ISMEAR = 0
+SIGMA = 0.05
+PREC = Accurate
+LREAL = .FALSE.
+""",
+                "bands": f"""# INCAR - {metal}O2 Band Structure
+# CosmicForge Lab
+
+SYSTEM = {metal}O2 - Bands
+ENCUT = {vasp_encut}
+EDIFF = 1.0e-6
+IBRION = -1
+ISMEAR = 0
+SIGMA = 0.05
+ICHARG = 11
+LORBIT = 11
+PREC = Accurate
+""",
+                "md": f"""# INCAR - {metal}O2 MD
+# CosmicForge Lab
+
+SYSTEM = {metal}O2 - MD
+ENCUT = 400
+EDIFF = 1.0e-4
+IBRION = 0
+NSW = 10000
+POTIM = 1.0
+SMASS = -3
+ISMEAR = 0
+SIGMA = 0.1
+"""
+            }
+            
+            with st.expander("⚙️ INCAR - Parámetros de Cálculo"):
+                st.code(incar_templates.get(vasp_calc, incar_templates["scf"]), language="bash")
+                st.download_button("📥 Descargar INCAR", incar_templates.get(vasp_calc, incar_templates["scf"]), file_name="INCAR")
+            
+            # KPOINTS
+            with st.expander("🎯 KPOINTS - Malla de Puntos k"):
+                if vasp_calc == "bands":
+                    vasp_kpoints = f"""K-Points for Band Structure
+10
+Line-mode
+Reciprocal
+  0.000  0.000  0.000    20  ! Gamma
+  0.500  0.000  0.000    20  ! X
+  0.500  0.500  0.000    20  ! M
+  0.000  0.500  0.000    20  ! Y
+  0.000  0.000  0.000    20  ! Gamma
+  0.000  0.000  0.500    20  ! Z
+"""
+                else:
+                    vasp_kpoints = f"""K-Points - Monkhorst-Pack
+0
+Monkhorst-Pack
+ 8 8 8
+0 0 0
+"""
+                st.code(vasp_kpoints, language="bash")
+                st.download_button("📥 Descargar KPOINTS", vasp_kpoints, file_name="KPOINTS")
+            
+            with st.expander("📚 POTCAR Info"):
+                potcar_info = f"""# POTCAR - Pseudopotenciales VASP
+# ================================
+# VASP requiere licencia comercial
+
+# Para {metal}O2 necesitas:
+cat $VASP_PP_PATH/{metal}/POTCAR $VASP_PP_PATH/O/POTCAR > POTCAR
+
+# Verificar:
+grep TITEL POTCAR
+
+# Recomendado para {metal}:
+# - PAW_{metal} (estándar)
+# - PAW_{metal}_pv (incluye semicore p)
+# - PAW_{metal}_sv (incluye semicore s y p)
+"""
+                st.code(potcar_info, language="bash")
         
-        # Bandas
-        with st.expander("📊 Quantum ESPRESSO - Band Structure"):
-            bands_input = generate_bands_input(metal)
-            st.code(bands_input, language='python')
-            st.download_button("📥 Descargar bands.in", bands_input, file_name=f"{metal}O2_bands.in")
+        # ========== LAMMPS ==========
+        with sim_tabs[2]:
+            st.markdown("### 🔧 LAMMPS - Molecular Dynamics")
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                lmp_temp = st.number_input("Temperatura (K):", value=300, min_value=1, max_value=5000)
+            with col2:
+                lmp_steps = st.number_input("Pasos MD:", value=50000, min_value=1000, step=10000)
+            with col3:
+                lmp_timestep = st.number_input("Timestep (fs):", value=1, min_value=1, max_value=10)
+            
+            lmp_input = f"""# LAMMPS Input - {metal}O2
+# Generado por CosmicForge Lab
+
+# ==================== INICIALIZACIÓN ====================
+units           metal
+dimension       3
+boundary        p p p
+atom_style      full
+neighbor        2.0 bin
+
+# ==================== ESTRUCTURA ====================
+lattice         fcc 4.0
+region          box block 0 10 0 10 0 10
+create_box      2 box
+create_atoms    1 box
+
+# ==================== MASA ====================
+mass            1 {ELEMENTS_DATABASE.get(metal, {}).get('mw', 50):.3f}   # {metal}
+mass            2 15.999   # O
+
+# ==================== POTENCIAL ====================
+pair_style      buck/coul/long 12.0
+pair_coeff      1 1 0.001 0.1 0.0    # {metal}-{metal}
+pair_coeff      2 2 0.001 0.1 0.0    # O-O
+pair_coeff      1 2 0.001 0.2 0.0    # {metal}-O
+
+kspace_style    pppm 1.0e-4
+
+# ==================== VELOCIDAD ====================
+velocity        all create {lmp_temp} 12345 mom yes rot yes dist gaussian
+
+# ==================== MINIMIZACIÓN ====================
+minimize        1.0e-4 1.0e-6 100 1000
+reset_timestep  0
+
+# ==================== TERMO ====================
+thermo          1000
+thermo_style    custom step temp pe ke etotal press vol density
+
+# ==================== EQUILIBRACIÓN ====================
+fix             1 all nvt temp {lmp_temp} {lmp_temp} 0.1
+timestep        0.00{lmp_timestep}
+run             10000
+
+# ==================== PRODUCCIÓN ====================
+unfix           1
+fix             2 all npt temp {lmp_temp} {lmp_temp} 0.1 iso 0 0 1.0
+run             {lmp_steps}
+
+# ==================== OUTPUT ====================
+write_data      {metal}O2_final.data
+write_restart   {metal}O2.restart
+"""
+            st.code(lmp_input, language="bash")
+            st.download_button("📥 Descargar input.in", lmp_input, file_name=f"{metal}O2_md.in")
+            
+            with st.expander("📊 data.lammps - Archivo de datos"):
+                lmp_data = f"""LAMMPS data file - {metal}O2
+
+1000 atoms
+2 atom types
+
+0.0 40.0 xlo xhi
+0.0 40.0 ylo yhi
+0.0 40.0 zlo zhi
+
+Masses
+
+1 {ELEMENTS_DATABASE.get(metal, {}).get('mw', 50):.3f}  # {metal}
+2 15.999  # O
+"""
+                st.code(lmp_data, language="bash")
+                st.download_button("📥 Descargar data.lammps", lmp_data, file_name="data.lammps")
+            
+            with st.expander("⚡ minimization.in"):
+                lmp_min = f"""# LAMMPS Minimización - {metal}O2
+
+units           metal
+dimension       3
+boundary        p p p
+atom_style      full
+
+lattice         fcc 4.0
+region          box block 0 5 0 5 0 5
+create_box      2 box
+
+mass 1 {ELEMENTS_DATABASE.get(metal, {}).get('mw', 50):.3f}
+mass 2 15.999
+
+pair_style      buck/coul/long 12.0
+pair_coeff      * * 0.001 0.1 0.0
+kspace_style    pppm 1.0e-4
+
+minimize        1.0e-6 1.0e-8 10000 100000
+write_data      minimized.data
+"""
+                st.code(lmp_min, language="bash")
+                st.download_button("📥 Descargar minimize.in", lmp_min, file_name="minimize.in")
+        
+        # ========== SCRIPTS PYTHON ==========
+        with sim_tabs[3]:
+            st.markdown("### 🐍 Scripts Python por Tarea")
+            st.markdown("Cada archivo incluye ejemplo de uso al final")
+            
+            st.info("📁 Los scripts están en la carpeta `tasks/` del repositorio")
+            
+            # VASP Task
+            with st.expander("📄 task_vasp.py - Generador VASP"):
+                vasp_script = '''#!/usr/bin/env python3
+"""
+Tarea VASP - Genera POSCAR, INCAR, KPOINTS
+
+Ejemplo de uso:
+    from tasks.task_vasp import VASPTask
+    
+    task = VASPTask(metal="Ti", calc_type="scf")
+    files = task.generate_all()
+    task.save_files("./vasp_calc")
+"""
+from tasks.task_vasp import VASPTask
+
+# Crear tarea
+task = VASPTask(metal="''' + metal + '''", calc_type="scf")
+
+# Generar archivos
+files = task.generate_all()
+for name, content in files.items():
+    print(f"Archivo: {name}")
+    print(content[:200] + "...")
+
+# Guardar
+task.save_files("./vasp_''' + metal + '''O2")
+'''
+                st.code(vasp_script, language="python")
+                st.download_button("📥 Descargar ejemplo_vasp.py", vasp_script, file_name="ejemplo_vasp.py")
+            
+            # LAMMPS Task
+            with st.expander("📄 task_lammps.py - Generador LAMMPS"):
+                lmp_script = '''#!/usr/bin/env python3
+"""
+Tarea LAMMPS - Genera input.in, data.lammps
+
+Ejemplo de uso:
+    from tasks.task_lammps import LAMMPSTask
+    
+    task = LAMMPSTask(metal="Ti", physical_props={"density": 4.5})
+    task.save_files("./lammps_calc")
+"""
+from tasks.task_lammps import LAMMPSTask
+
+# Crear tarea
+task = LAMMPSTask(metal="''' + metal + '''", physical_props={"density": ''' + str(round(pp.get('density', 4.5), 2)) + '''})
+
+# Generar input con temperatura personalizada
+input_content = task.generate_input(temperature=300, n_steps=50000)
+print(input_content)
+
+# Guardar
+task.save_files("./lammps_''' + metal + '''O2")
+'''
+                st.code(lmp_script, language="python")
+                st.download_button("📥 Descargar ejemplo_lammps.py", lmp_script, file_name="ejemplo_lammps.py")
+            
+            # QE Task
+            with st.expander("📄 task_quantum_espresso.py - Generador QE"):
+                qe_script = '''#!/usr/bin/env python3
+"""
+Tarea Quantum ESPRESSO - Genera pw.in, bands.in, dos.in
+
+Ejemplo de uso:
+    from tasks.task_quantum_espresso import QuantumESPRESSOTask
+    
+    task = QuantumESPRESSOTask(metal="Ti")
+    task.save_files("./qe_calc")
+"""
+from tasks.task_quantum_espresso import QuantumESPRESSOTask
+
+# Crear tarea
+task = QuantumESPRESSOTask(metal="''' + metal + '''", calc_type="scf")
+
+# Generar SCF
+print(task.generate_scf())
+
+# Generar bandas
+print(task.generate_bands())
+
+# Guardar todos los archivos
+task.save_files("./qe_''' + metal + '''O2")
+'''
+                st.code(qe_script, language="python")
+                st.download_button("📥 Descargar ejemplo_qe.py", qe_script, file_name="ejemplo_qe.py")
+            
+            st.markdown("---")
+            st.markdown("### 📦 Descargar todos los archivos")
+            if st.button("📦 Descargar ZIP completo", type="primary"):
+                st.info("Generando archivo ZIP con todos los archivos...")
+                # Aquí iría la generación del ZIP
     
     with tabs[6]:  # PDF
         st.subheader("📄 Generar Reporte Completo")
@@ -1712,7 +2177,7 @@ st.markdown(f"""
 # Footer
 st.markdown("""
 <div class='footer'>
-    <p>🚀 CosmicForge Lab v3.5 NASA Edition</p>
-    <p style='font-size: 12px;'>Edición Personal — Simulación | DFT | Optimización | Comparación</p>
+    <p>🚀 CosmicForge Lab v3.6 NASA Edition</p>
+    <p style='font-size: 12px;'>Exportación: VASP | LAMMPS | Quantum ESPRESSO | Scripts Python</p>
 </div>
 """, unsafe_allow_html=True)
