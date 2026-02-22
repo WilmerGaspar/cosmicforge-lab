@@ -6,7 +6,7 @@ Versión 3.6 - Edición NASA con DFT y Simulación Espacial
 Autor: Wilmer Gaspar
 Repositorio: https://github.com/WilmerGaspar/cosmicforge-lab
 
-NUEVO EN v3.6:
+NUEVO EN v3.7:
 - Simulación de condiciones extremas (vacío, radiación, microgravedad, ciclos térmicos)
 - Optimización con algoritmo genético
 - Cálculo DFT simulado (Quantum ESPRESSO)
@@ -919,7 +919,7 @@ def create_pdf_report(astro_data, physical_props, recipe, production_guide, simu
             def header(self):
                 self.set_font('Arial', 'B', 10)
                 self.set_text_color(255, 107, 0)
-                self.cell(0, 10, 'CosmicForge Lab v3.6 NASA Edition', 0, 1, 'C')
+                self.cell(0, 10, 'CosmicForge Lab v3.7 NASA Edition', 0, 1, 'C')
                 self.ln(2)
             
             def footer(self):
@@ -1063,14 +1063,14 @@ def create_pdf_report(astro_data, physical_props, recipe, production_guide, simu
         pdf.ln(20)
         pdf.set_font('Arial', 'I', 9)
         pdf.set_text_color(128, 128, 128)
-        pdf.cell(0, 8, 'Generado por CosmicForge Lab v3.6 NASA Edition', 0, 1, 'C')
+        pdf.cell(0, 8, 'Generado por CosmicForge Lab v3.7 NASA Edition', 0, 1, 'C')
         
         return pdf.output(dest='S').encode('latin-1')
         
     except Exception as e:
         # Fallback: crear texto simple
         report_text = f"""
-COSMICFORGE LAB v3.6 NASA EDITION - INFORME TECNICO
+COSMICFORGE LAB v3.7 NASA EDITION - INFORME TECNICO
 ================================================
 
 Objeto Astrofisico: {astro_data.get('object_name', 'Unknown')}
@@ -1265,7 +1265,7 @@ st.title("🚀 CosmicForge Lab")
 st.markdown("<p style='text-align:center; color:#888; font-size:18px;'>Diseño de Materiales Inspirado en Firmas Astrofísicas</p>", unsafe_allow_html=True)
 
 # Versión
-st.markdown("<p style='text-align:right; color:#ff6b00; font-size:12px;'>v3.6 NASA Edition</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:right; color:#ff6b00; font-size:12px;'>v3.7 NASA Edition</p>", unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.header("📥 Importar Datos")
@@ -2220,7 +2220,7 @@ st.markdown(f"""
 # Footer
 st.markdown("""
 <div class='footer'>
-    <p>🚀 CosmicForge Lab v3.6 NASA Edition</p>
+    <p>🚀 CosmicForge Lab v3.7 NASA Edition</p>
     <p style='font-size: 12px;'>Exportación: VASP | LAMMPS | Quantum ESPRESSO | Scripts Python</p>
 </div>
 """, unsafe_allow_html=True)
