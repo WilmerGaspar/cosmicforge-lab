@@ -1,4 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  CRYSTAL_STRUCTURES,
+  PSEUDOPOTENTIALS,
+  generateQEInput,
+  generateRunScript,
+  generateReadme,
+  nebulaToStructure,
+  astroToDFTParams,
+  getMaterialStatus,
+  DEFAULT_PARAMS,
+  type CrystalStructure,
+  type SimulationParams
+} from '@/lib/qe-generator'
 
 // Physics calculation functions
 function calculatePhysicalProperties(astroData: {
@@ -255,7 +268,7 @@ ${recipe.step_by_step.map((s: string, i: number) => `    ${i + 1}. ${s}`).join('
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { action, astroData, metal, materialType, alloyKey, physicalProps, recipe } = body
+    const { action, astroData, metal, materialType, alloyKey, physicalProps, recipe, structureId, params } = body
 
     if (action === 'generate') {
       // Calculate physical properties
@@ -280,6 +293,117 @@ export async function POST(request: NextRequest) {
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
           'Content-Disposition': `attachment; filename="CosmicForge_Report_${astroData.object_name.replace(/\s+/g, '_')}.txt"`
+        }
+      })
+    }
+
+    // New: Generate QE input files for nanoHUB
+    if (action === 'qe_generate') {
+      const targetStructureId = structureId || (astroData ? nebulaToStructure(astroData.type || 'emission', metal) : 'TiO2_rutile')
+      const structure = CRYSTAL_STRUCTURES[targetStructureId]
+      
+      if (!structure) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Unknown structure: ${targetStructureId}` 
+        }, { status: 400 })
+      }
+
+      // Calculate DFT params from astro data if available
+      let simParams: SimulationParams = { ...DEFAULT_PARAMS }
+      if (astroData) {
+        const astroParams = astroToDFTParams(astroData)
+        simParams = { ...DEFAULT_PARAMS, ...astroParams }
+      }
+      
+      // Override with user params if provided
+      if (params) {
+        simParams = { ...simParams, ...params }
+      }
+      
+      // Set title
+      simParams.title = astroData?.object_name 
+        ? `${structure.formula} - ${astroData.object_name}`
+        : `${structure.formula} DFT Calculation`
+      
+      // Generate files
+      const qeInput = generateQEInput(structure, simParams)
+      const runScript = generateRunScript(structure, simParams)
+      const readme = generateReadme(structure, simParams)
+      const status = getMaterialStatus(structure.formula)
+      
+      return NextResponse.json({
+        success: true,
+        qeFiles: {
+          pwInput: qeInput,
+          runScript: runScript,
+          readme: readme
+        },
+        structure: {
+          id: structure.id,
+          name: structure.name,
+          formula: structure.formula,
+          system: structure.system,
+          spaceGroup: structure.spaceGroup,
+          nat: structure.atoms.length,
+          latticeParameter: structure.latticeParameter
+        },
+        params: simParams,
+        materialStatus: status
+      })
+    }
+
+    // New: Get available structures
+    if (action === 'get_structures') {
+      const structures = Object.values(CRYSTAL_STRUCTURES).map(s => ({
+        id: s.id,
+        name: s.name,
+        formula: s.formula,
+        system: s.system,
+        nat: s.atoms.length
+      }))
+      
+      return NextResponse.json({
+        success: true,
+        structures
+      })
+    }
+
+    // New: Download QE files as ZIP
+    if (action === 'qe_download') {
+      const targetStructureId = structureId || 'TiO2_rutile'
+      const structure = CRYSTAL_STRUCTURES[targetStructureId]
+      
+      if (!structure) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Unknown structure: ${targetStructureId}` 
+        }, { status: 400 })
+      }
+
+      let simParams: SimulationParams = { ...DEFAULT_PARAMS }
+      if (astroData) {
+        const astroParams = astroToDFTParams(astroData)
+        simParams = { ...DEFAULT_PARAMS, ...astroParams }
+      }
+      if (params) {
+        simParams = { ...simParams, ...params }
+      }
+      simParams.title = astroData?.object_name 
+        ? `${structure.formula} - ${astroData.object_name}`
+        : `${structure.formula} DFT Calculation`
+      
+      const qeInput = generateQEInput(structure, simParams)
+      const runScript = generateRunScript(structure, simParams)
+      const readme = generateReadme(structure, simParams)
+      
+      // Return individual file for direct download
+      const filename = `${structure.formula}_${targetStructureId}_qe.in`
+      
+      return new NextResponse(qeInput, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${filename}"`
         }
       })
     }
