@@ -12,6 +12,11 @@ import {
   type CrystalStructure,
   type SimulationParams
 } from '@/lib/qe-generator'
+import {
+  NANOHUB_STRUCTURES,
+  generateNanoHUBFormat,
+  getNanoHUBStructureList
+} from '@/lib/nanohub-generator'
 
 // Physics calculation functions
 function calculatePhysicalProperties(astroData: {
@@ -405,6 +410,42 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'text/plain; charset=utf-8',
           'Content-Disposition': `attachment; filename="${filename}"`
         }
+      })
+    }
+
+    // nanoHUB Web Interface Format
+    if (action === 'nanohub_format') {
+      const targetStructureId = structureId || 'TiO2_rutile'
+      const structure = NANOHUB_STRUCTURES[targetStructureId]
+      
+      if (!structure) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Unknown structure: ${targetStructureId}` 
+        }, { status: 400 })
+      }
+      
+      const objectName = astroData?.object_name
+      const nanohubData = generateNanoHUBFormat(structure, objectName)
+      
+      return NextResponse.json({
+        success: true,
+        nanohub: nanohubData,
+        structure: {
+          id: structure.id,
+          name: structure.name,
+          formula: structure.formula,
+          nat: structure.atoms.length
+        }
+      })
+    }
+
+    // Get nanoHUB structures list
+    if (action === 'get_nanohub_structures') {
+      const structures = getNanoHUBStructureList()
+      return NextResponse.json({
+        success: true,
+        structures
       })
     }
 
