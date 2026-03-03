@@ -1,16 +1,15 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                     COSMICFORGE LAB v4.3                                     ║
-║           Sistema Experto con IA que APRENDE cálculos DFT                    ║
-║        Integración REAL: Materials Project API, Fibonacci, nanoHUB           ║
+║                     COSMICFORGE LAB v4.4                                     ║
+║           El Universo como Guía de Fabricación de Materiales                 ║
+║   Reportes: Matemática + Física + Química + Diagramas + Fibonacci            ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-NOVEDADES v4.3:
-1. IA que APRENDE a hacer cálculos DFT correctos en Quantum ESPRESSO
-2. Conexión REAL con Materials Project API
-3. Fibonacci con PDF descargable
-4. Validación automática para nanoHUB
-5. Sistema de corrección de errores DFT
+NOVEDADES v4.4:
+1. TODAS las nebulosas y sistemas del universo catalogados
+2. Reportes con matemática, física y química explicando fenómenos
+3. Diagramas ASCII de estructuras cristalinas
+4. Fibonacci expandido con patrones naturales del universo
 """
 
 import streamlit as st
@@ -33,8 +32,8 @@ from io import BytesIO
 # ============================================================================
 
 st.set_page_config(
-    page_title="CosmicForge Lab v4.3 - DFT Learning AI",
-    page_icon="🧠",
+    page_title="CosmicForge Lab v4.4 - Universe Factory",
+    page_icon="🌌",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -64,10 +63,237 @@ def apply_theme(theme_name):
         .chat-ai {{ background: {t['secondary']}; color: {t['text']}; }}
         .learning-indicator {{ background: linear-gradient(90deg, {t['success']}40, {t['accent']}40); padding: 0.5rem; border-radius: 8px; margin: 0.5rem 0; }}
         .dft-valid {{ background: {t['success']}20; border-left: 4px solid {t['success']}; padding: 1rem; margin: 0.5rem 0; }}
-        .dft-warning {{ background: #ff990020; border-left: 4px solid #ff9900; padding: 1rem; margin: 0.5rem 0; }}
-        .dft-error {{ background: #ff000020; border-left: 4px solid #ff0000; padding: 1rem; margin: 0.5rem 0; }}
+        .math-block {{ background: {t['secondary']}; padding: 1rem; border-radius: 8px; font-family: monospace; margin: 0.5rem 0; }}
+        .diagram {{ background: #000; color: #0f0; padding: 1rem; border-radius: 8px; font-family: monospace; overflow-x: auto; }}
+        .formula-chemistry {{ font-size: 1.5rem; text-align: center; padding: 0.5rem; }}
     </style>
     """, unsafe_allow_html=True)
+
+# ============================================================================
+# BASE DE DATOS COMPLETA DEL UNIVERSO
+# ============================================================================
+
+# NEBULOSAS POR CATEGORÍA
+NEBULAS_EMISSION = {
+    # Nebulosas de Emisión famosas
+    "Orion Nebula M42": {"type": "emision", "distance_ly": 1344, "temperature_K": 10000, "porosity": 0.35, "metal_dominant": "Ti", "detected_elements": ["Ti", "Fe", "Si", "O", "C", "N"], "coordinates": "05h 35m 17s", "constellation": "Orion", "size_ly": 24, "magnitude": 4.0, "discovery": "1610"},
+    "Eagle Nebula M16": {"type": "emision", "distance_ly": 7000, "temperature_K": 12000, "porosity": 0.30, "metal_dominant": "Al", "detected_elements": ["Al", "Si", "O", "Fe"], "coordinates": "18h 18m 48s", "constellation": "Serpens", "size_ly": 70, "magnitude": 6.0, "discovery": "1745"},
+    "Lagoon Nebula M8": {"type": "emision", "distance_ly": 4100, "temperature_K": 8500, "porosity": 0.40, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "S", "N"], "coordinates": "18h 03m 37s", "constellation": "Sagittarius", "size_ly": 110, "magnitude": 6.0, "discovery": "1654"},
+    "Carina Nebula NGC 3372": {"type": "emision", "distance_ly": 8500, "temperature_K": 15000, "porosity": 0.25, "metal_dominant": "Ti", "detected_elements": ["Ti", "Fe", "Ni", "O"], "coordinates": "10h 45m 08s", "constellation": "Carina", "size_ly": 300, "magnitude": 3.0, "discovery": "1751"},
+    "Trifid Nebula M20": {"type": "emision", "distance_ly": 5200, "temperature_K": 9000, "porosity": 0.38, "metal_dominant": "Si", "detected_elements": ["Si", "O", "C"], "coordinates": "18h 02m 23s", "constellation": "Sagittarius", "size_ly": 25, "magnitude": 6.3, "discovery": "1764"},
+    "Rosette Nebula NGC 2237": {"type": "emision", "distance_ly": 5000, "temperature_K": 11000, "porosity": 0.32, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "Si"], "coordinates": "06h 33m 45s", "constellation": "Monoceros", "size_ly": 130, "magnitude": 5.5, "discovery": "1784"},
+    "North America Nebula NGC 7000": {"type": "emision", "distance_ly": 1600, "temperature_K": 8000, "porosity": 0.45, "metal_dominant": "Si", "detected_elements": ["Si", "O", "N"], "coordinates": "20h 58m 47s", "constellation": "Cygnus", "size_ly": 100, "magnitude": 4.0, "discovery": "1786"},
+    "California Nebula NGC 1499": {"type": "emision", "distance_ly": 1000, "temperature_K": 7500, "porosity": 0.48, "metal_dominant": "Al", "detected_elements": ["Al", "O", "Fe"], "coordinates": "04h 03m 18s", "constellation": "Perseus", "size_ly": 100, "magnitude": 6.0, "discovery": "1885"},
+    "Eta Carinae Nebula": {"type": "emision", "distance_ly": 7500, "temperature_K": 20000, "porosity": 0.20, "metal_dominant": "Fe", "detected_elements": ["Fe", "Ni", "Co", "O"], "coordinates": "10h 45m 03s", "constellation": "Carina", "size_ly": 300, "magnitude": 3.0, "discovery": "1751"},
+    "Tarantula Nebula 30 Doradus": {"type": "emision", "distance_ly": 160000, "temperature_K": 25000, "porosity": 0.18, "metal_dominant": "Ti", "detected_elements": ["Ti", "Fe", "O", "Si"], "coordinates": "05h 38m 38s", "constellation": "Dorado", "size_ly": 1000, "magnitude": 8.0, "discovery": "1751"},
+    "Bubble Nebula NGC 7635": {"type": "emision", "distance_ly": 11000, "temperature_K": 18000, "porosity": 0.22, "metal_dominant": "Al", "detected_elements": ["Al", "O", "Si"], "coordinates": "23h 20m 42s", "constellation": "Cassiopeia", "size_ly": 10, "magnitude": 10.0, "discovery": "1787"},
+    "Omega Nebula M17": {"type": "emision", "distance_ly": 5500, "temperature_K": 9500, "porosity": 0.35, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "S"], "coordinates": "18h 20m 26s", "constellation": "Sagittarius", "size_ly": 15, "magnitude": 6.0, "discovery": "1745"},
+    "Witch Head Nebula IC 2118": {"type": "emision", "distance_ly": 900, "temperature_K": 7000, "porosity": 0.50, "metal_dominant": "Si", "detected_elements": ["Si", "O", "C"], "coordinates": "05h 06m 00s", "constellation": "Eridanus", "size_ly": 50, "magnitude": 13.0, "discovery": "1908"},
+    "Helix Nebula NGC 7293": {"type": "emision", "distance_ly": 700, "temperature_K": 120000, "porosity": 0.15, "metal_dominant": "O", "detected_elements": ["O", "N", "C", "He"], "coordinates": "22h 29m 38s", "constellation": "Aquarius", "size_ly": 2.5, "magnitude": 7.6, "discovery": "1824"},
+    "Dumbbell Nebula M27": {"type": "emision", "distance_ly": 1360, "temperature_K": 85000, "porosity": 0.20, "metal_dominant": "O", "detected_elements": ["O", "N", "He"], "coordinates": "19h 59m 36s", "constellation": "Vulpecula", "size_ly": 1.44, "magnitude": 7.5, "discovery": "1764"},
+    "Ring Nebula M57": {"type": "emision", "distance_ly": 2283, "temperature_K": 120000, "porosity": 0.18, "metal_dominant": "O", "detected_elements": ["O", "N", "C"], "coordinates": "18h 53m 35s", "constellation": "Lyra", "size_ly": 1.3, "magnitude": 8.8, "discovery": "1779"},
+    "Cat's Eye Nebula NGC 6543": {"type": "emision", "distance_ly": 3300, "temperature_K": 80000, "porosity": 0.16, "metal_dominant": "O", "detected_elements": ["O", "N", "C", "He"], "coordinates": "17h 58m 33s", "constellation": "Draco", "size_ly": 0.4, "magnitude": 8.1, "discovery": "1786"},
+    "Bug Nebula NGC 6302": {"type": "emision", "distance_ly": 4000, "temperature_K": 250000, "porosity": 0.12, "metal_dominant": "Ti", "detected_elements": ["Ti", "Fe", "O", "C"], "coordinates": "17h 13m 44s", "constellation": "Scorpius", "size_ly": 0.5, "magnitude": 9.6, "discovery": "1826"},
+}
+
+NEBULAS_SUPERNOVA = {
+    "Crab Nebula M1": {"type": "supernova", "distance_ly": 6500, "temperature_K": 15000, "porosity": 0.25, "metal_dominant": "Fe", "detected_elements": ["Fe", "Ni", "Co", "Cr", "O", "Si", "S"], "coordinates": "05h 34m 32s", "constellation": "Taurus", "size_ly": 11, "magnitude": 8.4, "discovery": "1731", "supernova_date": "1054"},
+    "Veil Nebula NGC 6960": {"type": "supernova", "distance_ly": 2400, "temperature_K": 12000, "porosity": 0.30, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "Si", "S"], "coordinates": "20h 45m 58s", "constellation": "Cygnus", "size_ly": 110, "magnitude": 7.0, "discovery": "1784", "supernova_date": "5000-8000 BC"},
+    "Cassiopeia A": {"type": "supernova", "distance_ly": 11000, "temperature_K": 50000, "porosity": 0.15, "metal_dominant": "Fe", "detected_elements": ["Fe", "Ni", "Co", "Ti", "O"], "coordinates": "23h 23m 26s", "constellation": "Cassiopeia", "size_ly": 10, "magnitude": 6.0, "discovery": "1947", "supernova_date": "1667"},
+    "Tycho's Supernova SN 1572": {"type": "supernova", "distance_ly": 10000, "temperature_K": 25000, "porosity": 0.20, "metal_dominant": "Fe", "detected_elements": ["Fe", "Si", "S", "O"], "coordinates": "00h 25m 19s", "constellation": "Cassiopeia", "size_ly": 20, "magnitude": 12.0, "discovery": "1572", "supernova_date": "1572"},
+    "SN 1006 Remnant": {"type": "supernova", "distance_ly": 7200, "temperature_K": 30000, "porosity": 0.18, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "Si"], "coordinates": "15h 02m 50s", "constellation": "Lupus", "size_ly": 60, "magnitude": 10.0, "discovery": "1006", "supernova_date": "1006"},
+    "Kepler's Supernova SN 1604": {"type": "supernova", "distance_ly": 20000, "temperature_K": 20000, "porosity": 0.22, "metal_dominant": "Fe", "detected_elements": ["Fe", "Ni", "O"], "coordinates": "17h 30m 42s", "constellation": "Ophiuchus", "size_ly": 14, "magnitude": 13.0, "discovery": "1604", "supernova_date": "1604"},
+    "Vela Supernova Remnant": {"type": "supernova", "distance_ly": 800, "temperature_K": 8000, "porosity": 0.35, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "Si", "C"], "coordinates": "08h 35m 20s", "constellation": "Vela", "size_ly": 100, "magnitude": 6.0, "discovery": "1952", "supernova_date": "11000 BC"},
+    "Puppis A Supernova Remnant": {"type": "supernova", "distance_ly": 6500, "temperature_K": 18000, "porosity": 0.25, "metal_dominant": "Ti", "detected_elements": ["Ti", "Fe", "O"], "coordinates": "08h 23m 08s", "constellation": "Puppis", "size_ly": 50, "magnitude": 8.0, "discovery": "1950", "supernova_date": "3700 BC"},
+    "IC 443 Jellyfish Nebula": {"type": "supernova", "distance_ly": 5000, "temperature_K": 10000, "porosity": 0.32, "metal_dominant": "Fe", "detected_elements": ["Fe", "Si", "O"], "coordinates": "06h 16m 30s", "constellation": "Gemini", "size_ly": 70, "magnitude": 12.0, "discovery": "1892", "supernova_date": "30000 BC"},
+    "W49B Supernova Remnant": {"type": "supernova", "distance_ly": 35000, "temperature_K": 35000, "porosity": 0.15, "metal_dominant": "Ni", "detected_elements": ["Ni", "Co", "Fe", "O"], "coordinates": "19h 11m 10s", "constellation": "Aquila", "size_ly": 25, "magnitude": 15.0, "discovery": "1959", "supernova_date": "1000 BC"},
+}
+
+NEBULAS_DARK = {
+    "Horsehead Nebula B33": {"type": "oscura", "distance_ly": 1500, "temperature_K": 50, "porosity": 0.70, "metal_dominant": "C", "detected_elements": ["C", "H", "O", "N", "S"], "coordinates": "05h 40m 59s", "constellation": "Orion", "size_ly": 3.5, "magnitude": 0, "discovery": "1888"},
+    "Barnard 68": {"type": "oscura", "distance_ly": 400, "temperature_K": 16, "porosity": 0.80, "metal_dominant": "C", "detected_elements": ["C", "H", "O", "N"], "coordinates": "17h 22m 38s", "constellation": "Ophiuchus", "size_ly": 0.5, "magnitude": 0, "discovery": "1919"},
+    "Pipe Nebula B78": {"type": "oscura", "distance_ly": 600, "temperature_K": 20, "porosity": 0.75, "metal_dominant": "C", "detected_elements": ["C", "H", "O"], "coordinates": "17h 33m 00s", "constellation": "Ophiuchus", "size_ly": 15, "magnitude": 0, "discovery": "1905"},
+    "Cone Nebula NGC 2264": {"type": "oscura", "distance_ly": 2700, "temperature_K": 30, "porosity": 0.65, "metal_dominant": "C", "detected_elements": ["C", "H", "O", "N"], "coordinates": "06h 41m 00s", "constellation": "Monoceros", "size_ly": 7, "magnitude": 0, "discovery": "1785"},
+    "Snake Nebula B72": {"type": "oscura", "distance_ly": 650, "temperature_K": 18, "porosity": 0.72, "metal_dominant": "C", "detected_elements": ["C", "H", "O"], "coordinates": "17h 23m 30s", "constellation": "Ophiuchus", "size_ly": 5, "magnitude": 0, "discovery": "1919"},
+    "Dark Doodad Nebula": {"type": "oscura", "distance_ly": 1000, "temperature_K": 25, "porosity": 0.68, "metal_dominant": "C", "detected_elements": ["C", "H", "O", "S"], "coordinates": "11h 35m 00s", "constellation": "Musca", "size_ly": 30, "magnitude": 0, "discovery": "1970"},
+    "Coalsack Nebula": {"type": "oscura", "distance_ly": 600, "temperature_K": 15, "porosity": 0.78, "metal_dominant": "C", "detected_elements": ["C", "H", "O"], "coordinates": "12h 53m 00s", "constellation": "Crux", "size_ly": 35, "magnitude": 0, "discovery": "1499"},
+    "Northern Coal Sack": {"type": "oscura", "distance_ly": 2000, "temperature_K": 20, "porosity": 0.70, "metal_dominant": "C", "detected_elements": ["C", "H", "O", "N"], "coordinates": "20h 30m 00s", "constellation": "Cygnus", "size_ly": 20, "magnitude": 0, "discovery": "1900"},
+}
+
+NEBULAS_REFLECTION = {
+    "Pleiades Reflection M45": {"type": "reflexion", "distance_ly": 444, "temperature_K": 12000, "porosity": 0.55, "metal_dominant": "Si", "detected_elements": ["Si", "O", "Fe"], "coordinates": "03h 47m 24s", "constellation": "Taurus", "size_ly": 8, "magnitude": 1.6, "discovery": "prehistórico"},
+    "Witch Head Nebula NGC 1909": {"type": "reflexion", "distance_ly": 900, "temperature_K": 7000, "porosity": 0.50, "metal_dominant": "Si", "detected_elements": ["Si", "O", "C"], "coordinates": "05h 02m 00s", "constellation": "Eridanus", "size_ly": 50, "magnitude": 13.0, "discovery": "1786"},
+    "NGC 1333": {"type": "reflexion", "distance_ly": 1000, "temperature_K": 5000, "porosity": 0.58, "metal_dominant": "Fe", "detected_elements": ["Fe", "Si", "O"], "coordinates": "03h 28m 58s", "constellation": "Perseus", "size_ly": 5, "magnitude": 9.7, "discovery": "1855"},
+    "IC 2118 Witch Head": {"type": "reflexion", "distance_ly": 900, "temperature_K": 6500, "porosity": 0.52, "metal_dominant": "Si", "detected_elements": ["Si", "O", "Fe"], "coordinates": "05h 06m 00s", "constellation": "Eridanus", "size_ly": 50, "magnitude": 13.0, "discovery": "1908"},
+    "Merope Nebula NGC 1435": {"type": "reflexion", "distance_ly": 444, "temperature_K": 11000, "porosity": 0.55, "metal_dominant": "Si", "detected_elements": ["Si", "O"], "coordinates": "03h 46m 20s", "constellation": "Taurus", "size_ly": 2, "magnitude": 13.0, "discovery": "1859"},
+    "Ced 201": {"type": "reflexion", "distance_ly": 1500, "temperature_K": 8000, "porosity": 0.48, "metal_dominant": "Al", "detected_elements": ["Al", "O"], "coordinates": "22h 10m 30s", "constellation": "Cepheus", "size_ly": 3, "magnitude": 12.0, "discovery": "1966"},
+}
+
+NEBULAS_PLANETARY = {
+    "Helix Nebula NGC 7293": {"type": "planetaria", "distance_ly": 700, "temperature_K": 120000, "porosity": 0.15, "metal_dominant": "O", "detected_elements": ["O", "N", "C", "He", "Ne"], "coordinates": "22h 29m 38s", "constellation": "Aquarius", "size_ly": 2.5, "magnitude": 7.6, "discovery": "1824"},
+    "Ring Nebula M57": {"type": "planetaria", "distance_ly": 2283, "temperature_K": 120000, "porosity": 0.18, "metal_dominant": "O", "detected_elements": ["O", "N", "C", "He"], "coordinates": "18h 53m 35s", "constellation": "Lyra", "size_ly": 1.3, "magnitude": 8.8, "discovery": "1779"},
+    "Cat's Eye Nebula NGC 6543": {"type": "planetaria", "distance_ly": 3300, "temperature_K": 80000, "porosity": 0.16, "metal_dominant": "O", "detected_elements": ["O", "N", "C", "He"], "coordinates": "17h 58m 33s", "constellation": "Draco", "size_ly": 0.4, "magnitude": 8.1, "discovery": "1786"},
+    "Dumbbell Nebula M27": {"type": "planetaria", "distance_ly": 1360, "temperature_K": 85000, "porosity": 0.20, "metal_dominant": "O", "detected_elements": ["O", "N", "He"], "coordinates": "19h 59m 36s", "constellation": "Vulpecula", "size_ly": 1.44, "magnitude": 7.5, "discovery": "1764"},
+    "Eskimo Nebula NGC 2392": {"type": "planetaria", "distance_ly": 6500, "temperature_K": 90000, "porosity": 0.14, "metal_dominant": "O", "detected_elements": ["O", "N", "C"], "coordinates": "07h 29m 10s", "constellation": "Gemini", "size_ly": 0.7, "magnitude": 9.2, "discovery": "1787"},
+    "Saturn Nebula NGC 7009": {"type": "planetaria", "distance_ly": 5200, "temperature_K": 100000, "porosity": 0.15, "metal_dominant": "O", "detected_elements": ["O", "N", "He"], "coordinates": "21h 04m 11s", "constellation": "Aquarius", "size_ly": 0.8, "magnitude": 8.0, "discovery": "1782"},
+    "Spirograph Nebula IC 418": {"type": "planetaria", "distance_ly": 3600, "temperature_K": 70000, "porosity": 0.17, "metal_dominant": "O", "detected_elements": ["O", "N", "C"], "coordinates": "05h 27m 28s", "constellation": "Lepus", "size_ly": 0.2, "magnitude": 9.3, "discovery": "1825"},
+    "Blinking Planetary NGC 6826": {"type": "planetaria", "distance_ly": 4400, "temperature_K": 75000, "porosity": 0.16, "metal_dominant": "O", "detected_elements": ["O", "N"], "coordinates": "19h 44m 48s", "constellation": "Cygnus", "size_ly": 0.4, "magnitude": 8.8, "discovery": "1793"},
+    "Little Dumbbell M76": {"type": "planetaria", "distance_ly": 3400, "temperature_K": 60000, "porosity": 0.19, "metal_dominant": "O", "detected_elements": ["O", "N", "He"], "coordinates": "01h 42m 19s", "constellation": "Perseus", "size_ly": 1.5, "magnitude": 10.1, "discovery": "1780"},
+    "Box Nebula NGC 6309": {"type": "planetaria", "distance_ly": 5500, "temperature_K": 85000, "porosity": 0.14, "metal_dominant": "O", "detected_elements": ["O", "N"], "coordinates": "17h 13m 44s", "constellation": "Ophiuchus", "size_ly": 0.3, "magnitude": 11.5, "discovery": "1786"},
+}
+
+# SISTEMAS ESTELARES ESPECIALES
+STELLAR_SYSTEMS = {
+    "Solar System": {"type": "sistema", "distance_ly": 0, "temperature_K": 5778, "porosity": 0.0, "metal_dominant": "Fe", "detected_elements": ["Fe", "Si", "O", "C", "Mg", "Ni"], "coordinates": "Local", "constellation": "Zodiac", "size_ly": 0.002, "magnitude": -26.7, "discovery": "prehistórico"},
+    "Alpha Centauri System": {"type": "sistema", "distance_ly": 4.37, "temperature_K": 5790, "porosity": 0.0, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "Si"], "coordinates": "14h 39m 36s", "constellation": "Centaurus", "size_ly": 0.00001, "magnitude": -0.27, "discovery": "prehistórico"},
+    "Sirius System": {"type": "sistema", "distance_ly": 8.6, "temperature_K": 9940, "porosity": 0.0, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "Si", "Mg"], "coordinates": "06h 45m 09s", "constellation": "Canis Major", "size_ly": 0.00001, "magnitude": -1.46, "discovery": "prehistórico"},
+    "Betelgeuse": {"type": "supergigante", "distance_ly": 700, "temperature_K": 3500, "porosity": 0.0, "metal_dominant": "C", "detected_elements": ["C", "O", "N", "Fe"], "coordinates": "05h 55m 10s", "constellation": "Orion", "size_ly": 0.0001, "magnitude": 0.42, "discovery": "prehistórico"},
+    "Rigel": {"type": "supergigante", "distance_ly": 860, "temperature_K": 12100, "porosity": 0.0, "metal_dominant": "Ti", "detected_elements": ["Ti", "Fe", "O", "Si"], "coordinates": "05h 14m 32s", "constellation": "Orion", "size_ly": 0.0001, "magnitude": 0.13, "discovery": "prehistórico"},
+    "Vega": {"type": "estrella", "distance_ly": 25, "temperature_K": 9602, "porosity": 0.0, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "Si"], "coordinates": "18h 36m 56s", "constellation": "Lyra", "size_ly": 0.00001, "magnitude": 0.03, "discovery": "prehistórico"},
+    "Arcturus": {"type": "gigante", "distance_ly": 37, "temperature_K": 4286, "porosity": 0.0, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "C"], "coordinates": "14h 15m 40s", "constellation": "Boötes", "size_ly": 0.00001, "magnitude": -0.05, "discovery": "prehistórico"},
+    "Antares": {"type": "supergigante", "distance_ly": 550, "temperature_K": 3660, "porosity": 0.0, "metal_dominant": "Fe", "detected_elements": ["Fe", "Ti", "O", "C"], "coordinates": "16h 29m 24s", "constellation": "Scorpius", "size_ly": 0.0001, "magnitude": 1.06, "discovery": "prehistórico"},
+    "Polaris": {"type": "supergigante", "distance_ly": 433, "temperature_K": 6015, "porosity": 0.0, "metal_dominant": "Fe", "detected_elements": ["Fe", "O", "Si"], "coordinates": "02h 31m 49s", "constellation": "Ursa Minor", "size_ly": 0.00001, "magnitude": 1.98, "discovery": "prehistórico"},
+    "Pistol Star": {"type": "hipergigante", "distance_ly": 25000, "temperature_K": 11800, "porosity": 0.0, "metal_dominant": "Fe", "detected_elements": ["Fe", "Ni", "O"], "coordinates": "17h 46m 15s", "constellation": "Sagittarius", "size_ly": 0.0001, "magnitude": 4.0, "discovery": "1990"},
+}
+
+# GALAXIAS
+GALAXIES = {
+    "Milky Way": {"type": "galaxia_espiral", "distance_ly": 0, "temperature_K": 10000, "porosity": 0.90, "metal_dominant": "H", "detected_elements": ["H", "He", "C", "O", "Fe", "Si"], "coordinates": "Centro", "constellation": "Sagittarius", "size_ly": 100000, "magnitude": 0, "discovery": "prehistórico"},
+    "Andromeda M31": {"type": "galaxia_espiral", "distance_ly": 2540000, "temperature_K": 12000, "porosity": 0.88, "metal_dominant": "H", "detected_elements": ["H", "He", "C", "O", "Fe"], "coordinates": "00h 42m 44s", "constellation": "Andromeda", "size_ly": 220000, "magnitude": 3.44, "discovery": "964"},
+    "Triangulum M33": {"type": "galaxia_espiral", "distance_ly": 2730000, "temperature_K": 10000, "porosity": 0.92, "metal_dominant": "H", "detected_elements": ["H", "He", "O", "Fe"], "coordinates": "01h 33m 51s", "constellation": "Triangulum", "size_ly": 60000, "magnitude": 5.72, "discovery": "1654"},
+    "Large Magellanic Cloud": {"type": "galaxia_irregular", "distance_ly": 160000, "temperature_K": 15000, "porosity": 0.85, "metal_dominant": "H", "detected_elements": ["H", "He", "O", "Fe"], "coordinates": "05h 23m 35s", "constellation": "Dorado", "size_ly": 14000, "magnitude": 0.9, "discovery": "prehistórico"},
+    "Small Magellanic Cloud": {"type": "galaxia_irregular", "distance_ly": 200000, "temperature_K": 12000, "porosity": 0.87, "metal_dominant": "H", "detected_elements": ["H", "He", "O"], "coordinates": "00h 52m 45s", "constellation": "Tucana", "size_ly": 7000, "magnitude": 2.7, "discovery": "prehistórico"},
+    "Sombrero Galaxy M104": {"type": "galaxia_espiral", "distance_ly": 31000000, "temperature_K": 8000, "porosity": 0.80, "metal_dominant": "H", "detected_elements": ["H", "He", "Fe", "O"], "coordinates": "12h 39m 59s", "constellation": "Virgo", "size_ly": 50000, "magnitude": 8.0, "discovery": "1781"},
+    "Whirlpool Galaxy M51": {"type": "galaxia_espiral", "distance_ly": 23000000, "temperature_K": 11000, "porosity": 0.82, "metal_dominant": "H", "detected_elements": ["H", "He", "O", "Fe"], "coordinates": "13h 29m 52s", "constellation": "Canes Venatici", "size_ly": 76000, "magnitude": 8.4, "discovery": "1773"},
+    "Pinwheel Galaxy M101": {"type": "galaxia_espiral", "distance_ly": 21000000, "temperature_K": 9000, "porosity": 0.85, "metal_dominant": "H", "detected_elements": ["H", "He", "O"], "coordinates": "14h 03m 13s", "constellation": "Ursa Major", "size_ly": 170000, "magnitude": 7.9, "discovery": "1781"},
+    "Centaurus A NGC 5128": {"type": "galaxia_eliptica", "distance_ly": 14000000, "temperature_K": 7000, "porosity": 0.75, "metal_dominant": "H", "detected_elements": ["H", "He", "Fe"], "coordinates": "13h 25m 28s", "constellation": "Centaurus", "size_ly": 60000, "magnitude": 6.8, "discovery": "1826"},
+    "Cartwheel Galaxy": {"type": "galaxia_anular", "distance_ly": 500000000, "temperature_K": 15000, "porosity": 0.70, "metal_dominant": "H", "detected_elements": ["H", "He", "O"], "coordinates": "00h 37m 41s", "constellation": "Sculptor", "size_ly": 150000, "magnitude": 15.0, "discovery": "1941"},
+}
+
+# Combinar todas las categorías
+ALL_COSMIC_OBJECTS = {}
+ALL_COSMIC_OBJECTS.update({f"🌌 {k}": v for k, v in NEBULAS_EMISSION.items()})
+ALL_COSMIC_OBJECTS.update({f"💥 {k}": v for k, v in NEBULAS_SUPERNOVA.items()})
+ALL_COSMIC_OBJECTS.update({f"🌑 {k}": v for k, v in NEBULAS_DARK.items()})
+ALL_COSMIC_OBJECTS.update({f"✨ {k}": v for k, v in NEBULAS_REFLECTION.items()})
+ALL_COSMIC_OBJECTS.update({f"💫 {k}": v for k, v in NEBULAS_PLANETARY.items()})
+ALL_COSMIC_OBJECTS.update({f"⭐ {k}": v for k, v in STELLAR_SYSTEMS.items()})
+ALL_COSMIC_OBJECTS.update({f"🌀 {k}": v for k, v in GALAXIES.items()})
+
+# ============================================================================
+# TABLA PERIÓDICA COMPLETA
+# ============================================================================
+
+PERIODIC_TABLE = {
+    "H": {"ox": [+1, -1], "mass": 1.008, "name": "Hidrógeno", "z": 1, "valence": 1, "electronegativity": 2.20},
+    "He": {"ox": [0], "mass": 4.003, "name": "Helio", "z": 2, "valence": 0, "electronegativity": 0},
+    "Li": {"ox": [+1], "mass": 6.941, "name": "Litio", "z": 3, "valence": 1, "electronegativity": 0.98},
+    "Be": {"ox": [+2], "mass": 9.012, "name": "Berilio", "z": 4, "valence": 2, "electronegativity": 1.57},
+    "B": {"ox": [+3], "mass": 10.81, "name": "Boro", "z": 5, "valence": 3, "electronegativity": 2.04},
+    "C": {"ox": [+4, +2, -4], "mass": 12.011, "name": "Carbono", "z": 6, "valence": 4, "electronegativity": 2.55},
+    "N": {"ox": [-3, +5, +3], "mass": 14.007, "name": "Nitrógeno", "z": 7, "valence": 3, "electronegativity": 3.04},
+    "O": {"ox": [-2, -1], "mass": 15.999, "name": "Oxígeno", "z": 8, "valence": 2, "electronegativity": 3.44},
+    "F": {"ox": [-1], "mass": 18.998, "name": "Flúor", "z": 9, "valence": 1, "electronegativity": 3.98},
+    "Ne": {"ox": [0], "mass": 20.180, "name": "Neón", "z": 10, "valence": 0, "electronegativity": 0},
+    "Na": {"ox": [+1], "mass": 22.990, "name": "Sodio", "z": 11, "valence": 1, "electronegativity": 0.93},
+    "Mg": {"ox": [+2], "mass": 24.305, "name": "Magnesio", "z": 12, "valence": 2, "electronegativity": 1.31},
+    "Al": {"ox": [+3], "mass": 26.982, "name": "Aluminio", "z": 13, "valence": 3, "electronegativity": 1.61},
+    "Si": {"ox": [+4, -4], "mass": 28.086, "name": "Silicio", "z": 14, "valence": 4, "electronegativity": 1.90},
+    "P": {"ox": [+5, +3, -3], "mass": 30.974, "name": "Fósforo", "z": 15, "valence": 3, "electronegativity": 2.19},
+    "S": {"ox": [-2, +4, +6], "mass": 32.065, "name": "Azufre", "z": 16, "valence": 2, "electronegativity": 2.58},
+    "Cl": {"ox": [-1, +7, +5, +3, +1], "mass": 35.453, "name": "Cloro", "z": 17, "valence": 1, "electronegativity": 3.16},
+    "Ar": {"ox": [0], "mass": 39.948, "name": "Argón", "z": 18, "valence": 0, "electronegativity": 0},
+    "K": {"ox": [+1], "mass": 39.098, "name": "Potasio", "z": 19, "valence": 1, "electronegativity": 0.82},
+    "Ca": {"ox": [+2], "mass": 40.078, "name": "Calcio", "z": 20, "valence": 2, "electronegativity": 1.00},
+    "Sc": {"ox": [+3], "mass": 44.956, "name": "Escandio", "z": 21, "valence": 3, "electronegativity": 1.36},
+    "Ti": {"ox": [+4, +3, +2], "mass": 47.867, "name": "Titanio", "z": 22, "valence": 4, "electronegativity": 1.54},
+    "V": {"ox": [+5, +4, +3, +2], "mass": 50.942, "name": "Vanadio", "z": 23, "valence": 5, "electronegativity": 1.63},
+    "Cr": {"ox": [+6, +3, +2], "mass": 51.996, "name": "Cromo", "z": 24, "valence": 3, "electronegativity": 1.66},
+    "Mn": {"ox": [+7, +6, +4, +3, +2], "mass": 54.938, "name": "Manganeso", "z": 25, "valence": 2, "electronegativity": 1.55},
+    "Fe": {"ox": [+3, +2], "mass": 55.845, "name": "Hierro", "z": 26, "valence": 2, "electronegativity": 1.83},
+    "Co": {"ox": [+3, +2], "mass": 58.933, "name": "Cobalto", "z": 27, "valence": 2, "electronegativity": 1.88},
+    "Ni": {"ox": [+2, +3], "mass": 58.693, "name": "Níquel", "z": 28, "valence": 2, "electronegativity": 1.91},
+    "Cu": {"ox": [+2, +1], "mass": 63.546, "name": "Cobre", "z": 29, "valence": 1, "electronegativity": 1.90},
+    "Zn": {"ox": [+2], "mass": 65.38, "name": "Zinc", "z": 30, "valence": 2, "electronegativity": 1.65},
+    "Ga": {"ox": [+3], "mass": 69.723, "name": "Galio", "z": 31, "valence": 3, "electronegativity": 1.81},
+    "Ge": {"ox": [+4, +2], "mass": 72.64, "name": "Germanio", "z": 32, "valence": 4, "electronegativity": 2.01},
+    "As": {"ox": [+5, +3, -3], "mass": 74.922, "name": "Arsénico", "z": 33, "valence": 3, "electronegativity": 2.18},
+    "Se": {"ox": [-2, +4, +6], "mass": 78.96, "name": "Selenio", "z": 34, "valence": 2, "electronegativity": 2.55},
+    "Br": {"ox": [-1, +5, +3, +1], "mass": 79.904, "name": "Bromo", "z": 35, "valence": 1, "electronegativity": 2.96},
+    "Kr": {"ox": [0], "mass": 83.798, "name": "Kriptón", "z": 36, "valence": 0, "electronegativity": 3.00},
+    "Rb": {"ox": [+1], "mass": 85.468, "name": "Rubidio", "z": 37, "valence": 1, "electronegativity": 0.82},
+    "Sr": {"ox": [+2], "mass": 87.62, "name": "Estroncio", "z": 38, "valence": 2, "electronegativity": 0.95},
+    "Y": {"ox": [+3], "mass": 88.906, "name": "Itrio", "z": 39, "valence": 3, "electronegativity": 1.22},
+    "Zr": {"ox": [+4], "mass": 91.224, "name": "Circonio", "z": 40, "valence": 4, "electronegativity": 1.33},
+    "Nb": {"ox": [+5, +3], "mass": 92.906, "name": "Niobio", "z": 41, "valence": 5, "electronegativity": 1.6},
+    "Mo": {"ox": [+6, +5, +4, +3], "mass": 95.96, "name": "Molibdeno", "z": 42, "valence": 6, "electronegativity": 2.16},
+    "Ru": {"ox": [+8, +6, +4, +3, +2], "mass": 101.07, "name": "Rutenio", "z": 44, "valence": 3, "electronegativity": 2.2},
+    "Rh": {"ox": [+3, +2], "mass": 102.91, "name": "Rodio", "z": 45, "valence": 3, "electronegativity": 2.28},
+    "Pd": {"ox": [+4, +2], "mass": 106.42, "name": "Paladio", "z": 46, "valence": 2, "electronegativity": 2.20},
+    "Ag": {"ox": [+1], "mass": 107.87, "name": "Plata", "z": 47, "valence": 1, "electronegativity": 1.93},
+    "Cd": {"ox": [+2], "mass": 112.41, "name": "Cadmio", "z": 48, "valence": 2, "electronegativity": 1.69},
+    "In": {"ox": [+3], "mass": 114.82, "name": "Indio", "z": 49, "valence": 3, "electronegativity": 1.78},
+    "Sn": {"ox": [+4, +2], "mass": 118.71, "name": "Estaño", "z": 50, "valence": 4, "electronegativity": 1.96},
+    "Sb": {"ox": [+5, +3, -3], "mass": 121.76, "name": "Antimonio", "z": 51, "valence": 3, "electronegativity": 2.05},
+    "Te": {"ox": [-2, +4, +6], "mass": 127.60, "name": "Telurio", "z": 52, "valence": 2, "electronegativity": 2.1},
+    "I": {"ox": [-1, +7, +5, +1], "mass": 126.90, "name": "Yodo", "z": 53, "valence": 1, "electronegativity": 2.66},
+    "Xe": {"ox": [0, +8, +6, +4, +2], "mass": 131.29, "name": "Xenón", "z": 54, "valence": 0, "electronegativity": 2.6},
+    "Cs": {"ox": [+1], "mass": 132.91, "name": "Cesio", "z": 55, "valence": 1, "electronegativity": 0.79},
+    "Ba": {"ox": [+2], "mass": 137.33, "name": "Bario", "z": 56, "valence": 2, "electronegativity": 0.89},
+    "La": {"ox": [+3], "mass": 138.91, "name": "Lantano", "z": 57, "valence": 3, "electronegativity": 1.10},
+    "Ce": {"ox": [+4, +3], "mass": 140.12, "name": "Cerio", "z": 58, "valence": 3, "electronegativity": 1.12},
+    "Pr": {"ox": [+3], "mass": 140.91, "name": "Praseodimio", "z": 59, "valence": 3, "electronegativity": 1.13},
+    "Nd": {"ox": [+3], "mass": 144.24, "name": "Neodimio", "z": 60, "valence": 3, "electronegativity": 1.14},
+    "Hf": {"ox": [+4], "mass": 178.49, "name": "Hafnio", "z": 72, "valence": 4, "electronegativity": 1.3},
+    "Ta": {"ox": [+5], "mass": 180.95, "name": "Tantalio", "z": 73, "valence": 5, "electronegativity": 1.5},
+    "W": {"ox": [+6, +5, +4], "mass": 183.84, "name": "Wolframio", "z": 74, "valence": 6, "electronegativity": 2.36},
+    "Re": {"ox": [+7, +6, +4], "mass": 186.21, "name": "Renio", "z": 75, "valence": 7, "electronegativity": 1.9},
+    "Os": {"ox": [+8, +6, +4, +3], "mass": 190.23, "name": "Osmio", "z": 76, "valence": 4, "electronegativity": 2.2},
+    "Ir": {"ox": [+4, +3], "mass": 192.22, "name": "Iridio", "z": 77, "valence": 3, "electronegativity": 2.20},
+    "Pt": {"ox": [+4, +2], "mass": 195.08, "name": "Platino", "z": 78, "valence": 2, "electronegativity": 2.28},
+    "Au": {"ox": [+3, +1], "mass": 196.97, "name": "Oro", "z": 79, "valence": 1, "electronegativity": 2.54},
+    "Hg": {"ox": [+2, +1], "mass": 200.59, "name": "Mercurio", "z": 80, "valence": 1, "electronegativity": 2.00},
+    "Tl": {"ox": [+3, +1], "mass": 204.38, "name": "Talio", "z": 81, "valence": 1, "electronegativity": 1.62},
+    "Pb": {"ox": [+4, +2], "mass": 207.2, "name": "Plomo", "z": 82, "valence": 2, "electronegativity": 2.33},
+    "Bi": {"ox": [+3], "mass": 208.98, "name": "Bismuto", "z": 83, "valence": 3, "electronegativity": 2.02},
+    "U": {"ox": [+6, +5, +4, +3], "mass": 238.03, "name": "Uranio", "z": 92, "valence": 6, "electronegativity": 1.38},
+}
+
+# ============================================================================
+# BASE DE DATOS DE MATERIALES
+# ============================================================================
+
+MATERIALS_DATABASE = {
+    "TiO2": {"name": "Dióxido de Titanio", "energy": -8.5, "band_gap": 3.2, "applications": ["Pigmentos", "Fotocatálisis", "Celdas solares", "Autolimpieza"], "mp_id": "mp-2657", "structure": "rutile", "density": 4.23, "crystal_system": "tetragonal"},
+    "Fe2O3": {"name": "Hematita", "energy": -7.8, "band_gap": 2.2, "applications": ["Pigmentos", "Catálisis", "Sensores", "Baterías Li-ion"], "mp_id": "mp-19770", "structure": "corundum", "density": 5.26, "crystal_system": "trigonal"},
+    "Al2O3": {"name": "Alúmina", "energy": -9.1, "band_gap": 8.8, "applications": ["Cerámicas", "Abrasivos", "Refractarios", "Implantes"], "mp_id": "mp-1143", "structure": "corundum", "density": 3.95, "crystal_system": "trigonal"},
+    "SiO2": {"name": "Sílice", "energy": -8.7, "band_gap": 9.0, "applications": ["Vidrio", "Electrónica", "Óptica", "Cemento"], "mp_id": "mp-6920", "structure": "quartz", "density": 2.65, "crystal_system": "trigonal"},
+    "ZnO": {"name": "Óxido de Zinc", "energy": -6.2, "band_gap": 3.3, "applications": ["Protectores solares", "Sensores", "Varistores"], "mp_id": "mp-2133", "structure": "wurtzite", "density": 5.61, "crystal_system": "hexagonal"},
+    "Ti2O3": {"name": "Sesquióxido de Titanio", "energy": -7.5, "band_gap": 0.1, "applications": ["Conductores", "Pigmentos especiales"], "mp_id": "mp-19701", "structure": "corundum", "density": 4.49, "crystal_system": "trigonal"},
+    "Fe3O4": {"name": "Magnetita", "energy": -7.2, "band_gap": 0.1, "applications": ["Ferrofluidos", "Almacenamiento magnético", "MRI"], "mp_id": "mp-19306", "structure": "spinel", "density": 5.17, "crystal_system": "cubic"},
+    "CuO": {"name": "Óxido Cúprico", "energy": -5.8, "band_gap": 1.2, "applications": ["Superconductores", "Catálisis", "Sensores"], "mp_id": "mp-19017", "structure": "tenorite", "density": 6.31, "crystal_system": "monoclinic"},
+    "NiO": {"name": "Óxido de Níquel", "energy": -6.5, "band_gap": 3.8, "applications": ["Baterías", "Catálisis", "Electrodo"], "mp_id": "mp-19009", "structure": "rocksalt", "density": 6.67, "crystal_system": "cubic"},
+    "Co3O4": {"name": "Óxido de Cobalto", "energy": -6.8, "band_gap": 1.6, "applications": ["Baterías Li-ion", "Catálisis", "Pigmentos"], "mp_id": "mp-19009", "structure": "spinel", "density": 6.11, "crystal_system": "cubic"},
+}
+
+# ============================================================================
+# CONSTANTES FÍSICAS
+# ============================================================================
+
+PHYSICAL_CONSTANTS = {
+    "c": 299792458,  # Velocidad de la luz (m/s)
+    "h": 6.62607015e-34,  # Constante de Planck (J·s)
+    "k_B": 1.380649e-23,  # Constante de Boltzmann (J/K)
+    "e": 1.602176634e-19,  # Carga del electrón (C)
+    "m_e": 9.1093837015e-31,  # Masa del electrón (kg)
+    "m_p": 1.67262192369e-27,  # Masa del protón (kg)
+    "N_A": 6.02214076e23,  # Número de Avogadro
+    "R": 8.314462618,  # Constante de los gases (J/(mol·K))
+    "phi": (1 + math.sqrt(5)) / 2,  # Proporción áurea
+    "alpha": 7.2973525693e-3,  # Constante de estructura fina
+    "sigma": 5.670374419e-8,  # Constante de Stefan-Boltzmann
+    "G": 6.67430e-11,  # Constante gravitacional
+}
 
 # ============================================================================
 # SESSION STATE
@@ -76,7 +302,7 @@ def apply_theme(theme_name):
 def init_session():
     defaults = {
         'theme': 'nocturno',
-        'nebula_data': None,
+        'cosmic_object': None,
         'material_stable': None,
         'chat_history': [],
         'learning_memory': {},
@@ -84,9 +310,10 @@ def init_session():
         'api_results': {},
         'fibonacci_predictions': [],
         'internet_search_results': None,
-        'dft_knowledge': {},  # Nuevo: conocimiento DFT aprendido
-        'dft_validations': [],  # Nuevo: historial de validaciones DFT
-        'materials_project_data': None,  # Nuevo: datos de Materials Project
+        'dft_knowledge': {},
+        'dft_validations': [],
+        'materials_project_data': None,
+        'current_report': None,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -95,1337 +322,813 @@ def init_session():
 init_session()
 
 # ============================================================================
-# BASE DE DATOS COMPLETA
+# GENERADOR DE REPORTES CIENTÍFICOS
 # ============================================================================
 
-NEBULAS_DATABASE = {
-    "Orion Nebula M42": {"type": "emision", "distance_ly": 1344, "temperature_K": 10000, "porosity": 0.35, "metal_dominant": "Ti", "detected_elements": ["Ti", "Fe", "Si", "O"], "coordinates": "05h 35m 17s"},
-    "Crab Nebula M1": {"type": "supernova", "distance_ly": 6500, "temperature_K": 15000, "porosity": 0.25, "metal_dominant": "Fe", "detected_elements": ["Fe", "Ni", "Co", "Cr", "O"], "coordinates": "05h 34m 32s"},
-    "Ring Nebula M57": {"type": "reflexion", "distance_ly": 2283, "temperature_K": 8000, "porosity": 0.45, "metal_dominant": "Si", "detected_elements": ["Si", "O", "C"], "coordinates": "18h 53m 35s"},
-    "Horsehead Nebula": {"type": "oscura", "distance_ly": 1500, "temperature_K": 50, "porosity": 0.70, "metal_dominant": "C", "detected_elements": ["C", "H", "O", "N"], "coordinates": "05h 40m 59s"},
-    "Eagle Nebula M16": {"type": "emision", "distance_ly": 7000, "temperature_K": 12000, "porosity": 0.30, "metal_dominant": "Al", "detected_elements": ["Al", "Si", "O", "Fe"], "coordinates": "18h 18m 48s"},
-}
-
-PERIODIC_TABLE = {
-    "Ti": {"ox": [+4, +3, +2], "mass": 47.867, "name": "Titanio", "z": 22, "valence": 4},
-    "Fe": {"ox": [+3, +2], "mass": 55.845, "name": "Hierro", "z": 26, "valence": [2, 3]},
-    "Al": {"ox": [+3], "mass": 26.982, "name": "Aluminio", "z": 13, "valence": 3},
-    "Si": {"ox": [+4, -4], "mass": 28.086, "name": "Silicio", "z": 14, "valence": 4},
-    "Zn": {"ox": [+2], "mass": 65.38, "name": "Zinc", "z": 30, "valence": 2},
-    "Cu": {"ox": [+2, +1], "mass": 63.546, "name": "Cobre", "z": 29, "valence": [1, 2]},
-    "Ni": {"ox": [+2, +3], "mass": 58.693, "name": "Níquel", "z": 28, "valence": [2, 3]},
-    "Co": {"ox": [+2, +3], "mass": 58.933, "name": "Cobalto", "z": 27, "valence": [2, 3]},
-    "O": {"ox": [-2], "mass": 15.999, "name": "Oxígeno", "z": 8, "valence": 2},
-    "C": {"ox": [+4, +2, -4], "mass": 12.011, "name": "Carbono", "z": 6, "valence": 4},
-    "N": {"ox": [-3, +5], "mass": 14.007, "name": "Nitrógeno", "z": 7, "valence": [3, 5]},
-}
-
-MATERIALS_DATABASE = {
-    "TiO2": {"name": "Dióxido de Titanio", "energy": -8.5, "band_gap": 3.2, "applications": ["Pigmentos", "Fotocatálisis", "Celdas solares"], "mp_id": "mp-2657", "structure": "rutile"},
-    "Fe2O3": {"name": "Hematita", "energy": -7.8, "band_gap": 2.2, "applications": ["Pigmentos", "Catálisis", "Sensores"], "mp_id": "mp-19770", "structure": "corundum"},
-    "Al2O3": {"name": "Alúmina", "energy": -9.1, "band_gap": 8.8, "applications": ["Cerámicas", "Abrasivos", "Refractarios"], "mp_id": "mp-1143", "structure": "corundum"},
-    "SiO2": {"name": "Sílice", "energy": -8.7, "band_gap": 9.0, "applications": ["Vidrio", "Electrónica", "Óptica"], "mp_id": "mp-6920", "structure": "quartz"},
-    "ZnO": {"name": "Óxido de Zinc", "energy": -6.2, "band_gap": 3.3, "applications": ["Protectores solares", "Sensores"], "mp_id": "mp-2133", "structure": "wurtzite"},
-}
-
-INDUSTRIES = {
-    "Aeroespacial": {"materials": ["TiO2", "Al2O3", "TiAl"], "applications": ["Turbinas", "Recubrimientos térmicos", "Estructuras ligeras"]},
-    "Energía": {"materials": ["TiO2", "SiO2"], "applications": ["Celdas solares", "Baterías Li-ion", "Hidrógeno verde"]},
-    "Electrónica": {"materials": ["SiO2", "ZnO"], "applications": ["Semiconductores", "Sensores", "Transistores"]},
-    "Medicina": {"materials": ["TiO2", "Al2O3"], "applications": ["Implantes dentales", "Prótesis", "Cubiertas antibacterianas"]},
-    "Medio Ambiente": {"materials": ["TiO2", "Fe2O3"], "applications": ["Fotocatálisis", "Remediación", "Purificación de agua"]},
-}
-
-# ============================================================================
-# PSEUDOPOTENTIALS PARA QUANTUM ESPRESSO
-# ============================================================================
-
-PSEUDOPOTENTIALS = {
-    "Ti": {"name": "Ti.pbe-spn-kjpaw_psl.1.0.0.UPF", "type": "PAW", "cutoff": 70},
-    "Fe": {"name": "Fe.pbe-spn-kjpaw_psl.1.0.0.UPF", "type": "PAW", "cutoff": 65},
-    "Al": {"name": "Al.pbe-nl-kjpaw_psl.1.0.0.UPF", "type": "PAW", "cutoff": 45},
-    "Si": {"name": "Si.pbe-nl-kjpaw_psl.1.0.0.UPF", "type": "PAW", "cutoff": 45},
-    "Zn": {"name": "Zn.pbe-dnl-kjpaw_psl.1.0.0.UPF", "type": "PAW", "cutoff": 60},
-    "O": {"name": "O.pbe-nl-kjpaw_psl.1.0.0.UPF", "type": "PAW", "cutoff": 55},
-    "C": {"name": "C.pbe-nl-kjpaw_psl.1.0.0.UPF", "type": "PAW", "cutoff": 50},
-    "N": {"name": "N.pbe-nl-kjpaw_psl.1.0.0.UPF", "type": "PAW", "cutoff": 50},
-}
-
-# ============================================================================
-# CONOCIMIENTO DFT APRENDIDO
-# ============================================================================
-
-DFT_KNOWLEDGE_BASE = {
-    "ecutwfc_rules": {
-        "default": 60,
-        "Ti": 70,
-        "Fe": 65,
-        "O": 55,
-        "Al": 45,
-        "Si": 45,
-    },
-    "ecutrho_rules": {
-        "multiplier": 4,  # ecutrho = 4 * ecutwfc
-    },
-    "k_points_rules": {
-        "metals": [12, 12, 12],
-        "semiconductors": [8, 8, 8],
-        "insulators": [6, 6, 6],
-    },
-    "convergence_threshold": {
-        "scf": 1e-6,
-        "relax": 1e-5,
-        "md": 1e-4,
-    },
-    "degauss_values": {
-        "metals": 0.02,
-        "semiconductors": 0.001,
-    },
-    "common_errors": {
-        "convergence_failed": "Aumentar ecutwfc o reducir mixing_beta",
-        "negative_occupations": "Usar smearing='gaussian' y degauss más alto",
-        "not_converged_scf": "Aumentar electron_maxstep o usar diagonalization='cg'",
-    },
-    "learned_corrections": []  # Aquí se guardan las correcciones aprendidas
-}
-
-# ============================================================================
-# CONEXIÓN REAL CON MATERIALS PROJECT API
-# ============================================================================
-
-class MaterialsProjectAPI:
-    """Conexión REAL con Materials Project API."""
+class ScientificReportGenerator:
+    """Genera reportes con matemática, física y química."""
     
     def __init__(self):
-        # API key pública de ejemplo - el usuario puede usar su propia key
-        self.api_key = "YOUR_API_KEY"  # Reemplazar con key real
-        self.base_url = "https://api.materialsproject.org/v1"
+        self.constants = PHYSICAL_CONSTANTS
     
-    def query_material(self, formula: str, api_key: str = None) -> Dict:
-        """Consulta real a Materials Project."""
+    def generate_full_report(self, cosmic_object: Dict, material: Dict, fibonacci_data: List[Dict]) -> str:
+        """Genera un reporte científico completo."""
         
-        # Si hay API key proporcionada, intentar conexión real
-        if api_key:
-            try:
-                # Construir URL
-                url = f"{self.base_url}/materials/{formula}/summary"
-                headers = {"X-API-KEY": api_key}
-                
-                req = urllib.request.Request(url, headers=headers)
-                with urllib.request.urlopen(req, timeout=10) as response:
-                    data = json.loads(response.read().decode())
-                    return {"status": "success", "source": "Materials Project API", "data": data}
-            except Exception as e:
-                return {"status": "error", "message": str(e)}
+        report = []
+        report.append("=" * 80)
+        report.append("           COSMICFORGE LAB v4.4 - REPORTE CIENTÍFICO COMPLETO")
+        report.append("=" * 80)
+        report.append(f"\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # Si no hay API key, usar datos locales conocidos
-        known = MATERIALS_DATABASE.get(formula, {})
-        if known:
-            return {
-                "status": "found_local", 
-                "source": "Base de datos local (usa API key para datos completos)",
-                "data": {
-                    "formula": formula,
-                    "name": known.get("name"),
-                    "energy_per_atom": known.get("energy"),
-                    "band_gap": known.get("band_gap"),
-                    "mp_id": known.get("mp_id"),
-                    "structure_type": known.get("structure"),
-                    "applications": known.get("applications", []),
-                    "elements": self._parse_elements(formula),
-                }
-            }
+        # Sección 1: Objeto Cósmico
+        report.append("\n" + "=" * 80)
+        report.append("                    1. ANÁLISIS DEL OBJETO CÓSMICO")
+        report.append("=" * 80)
+        report.extend(self._analyze_cosmic_object(cosmic_object))
         
-        return {"status": "not_found", "source": "Materials Project"}
+        # Sección 2: Física
+        report.append("\n" + "=" * 80)
+        report.append("                    2. ANÁLISIS FÍSICO")
+        report.append("=" * 80)
+        report.extend(self._physics_analysis(cosmic_object))
+        
+        # Sección 3: Matemáticas
+        report.append("\n" + "=" * 80)
+        report.append("                    3. ANÁLISIS MATEMÁTICO")
+        report.append("=" * 80)
+        report.extend(self._math_analysis(cosmic_object, material))
+        
+        # Sección 4: Química
+        report.append("\n" + "=" * 80)
+        report.append("                    4. ANÁLISIS QUÍMICO")
+        report.append("=" * 80)
+        report.extend(self._chemistry_analysis(material, cosmic_object))
+        
+        # Sección 5: Fibonacci
+        report.append("\n" + "=" * 80)
+        report.append("                    5. ANÁLISIS FIBONACCI")
+        report.append("=" * 80)
+        report.extend(self._fibonacci_analysis(fibonacci_data))
+        
+        # Sección 6: Diagramas
+        report.append("\n" + "=" * 80)
+        report.append("                    6. DIAGRAMAS ESTRUCTURALES")
+        report.append("=" * 80)
+        report.extend(self._generate_diagrams(material))
+        
+        # Sección 7: DFT
+        report.append("\n" + "=" * 80)
+        report.append("                    7. PARÁMETROS DFT RECOMENDADOS")
+        report.append("=" * 80)
+        report.extend(self._dft_parameters(material))
+        
+        report.append("\n" + "=" * 80)
+        report.append("                    FIN DEL REPORTE")
+        report.append("=" * 80)
+        
+        return "\n".join(report)
     
-    def _parse_elements(self, formula: str) -> List[str]:
-        """Extrae elementos de una fórmula."""
-        elements = []
-        current = ""
-        for char in formula:
-            if char.isupper():
-                if current:
-                    elements.append(current)
-                current = char
-            elif char.islower():
-                current += char
-            elif char.isdigit():
-                continue
-        if current:
-            elements.append(current)
-        return elements
+    def _analyze_cosmic_object(self, obj: Dict) -> List[str]:
+        lines = []
+        name = obj.get("name", "Objeto desconocido")
+        obj_type = obj.get("type", "N/A")
+        distance = obj.get("distance_ly", 0)
+        temp = obj.get("temperature_K", 0)
+        metal = obj.get("metal_dominant", "N/A")
+        elements = obj.get("detected_elements", [])
+        constellation = obj.get("constellation", "N/A")
+        size = obj.get("size_ly", 0)
+        
+        lines.append(f"\n📦 Nombre: {name}")
+        lines.append(f"📍 Constelación: {constellation}")
+        lines.append(f"🏷️  Tipo: {obj_type}")
+        lines.append(f"📏 Distancia: {distance:,} años luz = {distance * 9.461e15:,} metros")
+        lines.append(f"🌡️  Temperatura: {temp:,} K")
+        lines.append(f"🔬 Elemento dominante: {metal}")
+        lines.append(f"🧪 Elementos detectados: {', '.join(elements)}")
+        lines.append(f"📐 Tamaño: {size} años luz")
+        
+        # Cálculos adicionales
+        if temp > 0:
+            # Ley de Wien
+            lambda_max = (2.898e-3) / temp  # metros
+            lines.append(f"\n📊 Cálculos adicionales:")
+            lines.append(f"   Longitud de onda pico (Ley de Wien): λ_max = {lambda_max*1e9:.2f} nm")
+            
+            # Ley de Stefan-Boltzmann
+            sigma = self.constants["sigma"]
+            power = sigma * temp**4  # W/m²
+            lines.append(f"   Potencia radiada (Stefan-Boltzmann): P = {power:.2e} W/m²")
+            
+            # Energía del fotón pico
+            h = self.constants["h"]
+            c = self.constants["c"]
+            e_photon = (h * c / lambda_max) / self.constants["e"]  # eV
+            lines.append(f"   Energía del fotón pico: E = {e_photon:.2f} eV")
+        
+        return lines
     
-    def get_structure(self, mp_id: str) -> Dict:
-        """Obtiene estructura cristalina por MP ID."""
-        # Datos simulados basados en estructuras conocidas
-        structures = {
-            "mp-2657": {  # TiO2
-                "lattice": [[4.594, 0, 0], [0, 4.594, 0], [0, 0, 2.959]],
-                "atoms": ["Ti", "Ti", "O", "O", "O", "O"],
-                "positions": [[0, 0, 0], [0.5, 0.5, 0.5], [0.305, 0.305, 0], [0.695, 0.695, 0], [0.805, 0.195, 0.5], [0.195, 0.805, 0.5]],
-                "spacegroup": "P4_2/mnm"
-            },
-            "mp-19770": {  # Fe2O3
-                "lattice": [[5.038, 0, 0], [0, 5.038, 0], [0, 0, 13.772]],
-                "atoms": ["Fe", "Fe", "Fe", "Fe", "O", "O", "O", "O", "O", "O"],
-                "positions": [[0, 0, 0], [0, 0, 0.333], [0.333, 0.667, 0.167], [0.667, 0.333, 0.5], [0.306, 0, 0.083], [0, 0.306, 0.083], [0.694, 0, 0.25], [0, 0.694, 0.25], [0.306, 0, 0.417], [0, 0.306, 0.417]],
-                "spacegroup": "R-3c"
-            }
-        }
-        return structures.get(mp_id, {"error": "Estructura no encontrada"})
-
-# ============================================================================
-# GENERADOR DE PDF CON FIBONACCI
-# ============================================================================
-
-class PDFGenerator:
-    """Genera PDF con resultados de Fibonacci y análisis de materiales."""
+    def _physics_analysis(self, obj: Dict) -> List[str]:
+        lines = []
+        temp = obj.get("temperature_K", 0)
+        distance = obj.get("distance_ly", 0)
+        
+        lines.append("\n📚 FÓRMULAS FÍSICAS APLICADAS:")
+        
+        # Ley de Stefan-Boltzmann
+        lines.append("\n🔵 Ley de Stefan-Boltzmann:")
+        lines.append("   P = σ × T⁴")
+        lines.append(f"   donde σ = 5.67×10⁻⁸ W/(m²·K⁴)")
+        lines.append(f"   Para T = {temp} K:")
+        sigma = self.constants["sigma"]
+        P = sigma * temp**4
+        lines.append(f"   P = {P:.4e} W/m²")
+        
+        # Ley de Wien
+        lines.append("\n🔵 Ley de Desplazamiento de Wien:")
+        lines.append("   λ_max = b / T")
+        lines.append("   donde b = 2.898×10⁻³ m·K")
+        if temp > 0:
+            lambda_max = 2.898e-3 / temp
+            lines.append(f"   λ_max = {lambda_max*1e9:.2f} nm ({'UV' if lambda_max < 400 else 'Visible' if lambda_max < 700 else 'IR'})")
+        
+        # Energía de Planck
+        lines.append("\n🔵 Energía de Fotón (Planck):")
+        lines.append("   E = h × f = h × c / λ")
+        lines.append(f"   donde h = 6.626×10⁻³⁴ J·s")
+        if temp > 0:
+            lambda_max = 2.898e-3 / temp
+            E_joules = self.constants["h"] * self.constants["c"] / lambda_max
+            E_eV = E_joules / self.constants["e"]
+            lines.append(f"   E_peak = {E_eV:.4f} eV")
+        
+        # Escala de tiempo
+        lines.append("\n🔵 Tiempo de viaje de la luz:")
+        lines.append(f"   t = d / c = {distance} años luz")
+        lines.append(f"   = {distance * 365.25 * 24 * 3600:.4e} segundos")
+        lines.append(f"   Lo que vemos ocurrió hace {distance} años")
+        
+        return lines
     
-    @staticmethod
-    def generate_fibonacci_pdf(predictions: List[Dict], elem1: str, elem2: str, discovered: List[Dict]) -> bytes:
-        """Genera un PDF con los resultados de Fibonacci."""
+    def _math_analysis(self, obj: Dict, material: Dict) -> List[str]:
+        lines = []
+        phi = self.constants["phi"]  # Proporción áurea
         
-        # Crear contenido de texto para el PDF
-        pdf_content = f"""
-================================================================================
-                    COSMICFORGE LAB v4.3 - REPORTE FIBONACCI
-================================================================================
-
-Fecha: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-Elementos analizados: {elem1} - {elem2}
-
-================================================================================
-                           SECUENCIA FIBONACCI
-================================================================================
-
-La secuencia Fibonacci se aplica a la estequiometría de materiales:
-
-Fib(n): 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144...
-
-La proporción áurea φ = (1 + √5) / 2 ≈ 1.618
-
-Esta proporción aparece en:
-- Estructuras cristalinas cuasi-periódicas
-- Patrones de crecimiento en cristales
-- Relaciones de parámetros de red en algunos materiales
-
-================================================================================
-                      MATERIALES PREDICHOS POR FIBONACCI
-================================================================================
-
-"""
+        lines.append("\n📚 MATEMÁTICAS APLICADAS:")
         
-        for i, pred in enumerate(predictions[:10], 1):
-            conf_text = "ALTA" if pred['confidence'] > 0.7 else "MEDIA" if pred['confidence'] > 0.5 else "BAJA"
-            pdf_content += f"""
-{i}. {pred['formula']}
-   ────────────────────────────────────────────────────────
-   Ratio Fibonacci: {pred['ratio']}
-   Confianza: {pred['confidence']:.0%} ({conf_text})
-   Índices Fibonacci: F({pred['fib_indices'][0]}) x F({pred['fib_indices'][1]})
-   Producto: {pred['fib_product']}
-
-"""
+        # Proporción áurea
+        lines.append("\n🟡 Proporción Áurea (φ):")
+        lines.append("   φ = (1 + √5) / 2 ≈ 1.618033988749...")
+        lines.append(f"   φ² = {phi**2:.10f}")
+        lines.append(f"   1/φ = {1/phi:.10f}")
+        lines.append("   Esta proporción aparece en:")
+        lines.append("   • Espiral de brazos galácticos")
+        lines.append("   • Patrones de crecimiento en nebulosas")
+        lines.append("   • Estructuras cuasicristalinas")
         
-        # Agregar materiales descubiertos
-        if discovered:
-            pdf_content += """
-================================================================================
-                        MATERIALES DESCUBIERTOS
-================================================================================
-
-"""
-            for d in discovered[-10:]:
-                pdf_content += f"""
-• {d['formula']}
-  Elementos: {', '.join(d['elements'])}
-  Ratio: {d['ratio']}
-  Confianza: {d['confidence']:.0%}
-  Estado: {d['status']}
-  Fecha: {d['discovery_date'][:10]}
-
-"""
+        # Secuencia Fibonacci
+        lines.append("\n🟡 Secuencia Fibonacci:")
+        fib = [1, 1]
+        for i in range(20):
+            fib.append(fib[-1] + fib[-2])
+        lines.append(f"   F(n) = {fib[:12]}...")
+        lines.append("   Ratio F(n+1)/F(n) → φ cuando n → ∞")
         
-        # Agregar información técnica
-        pdf_content += """
-================================================================================
-                        INFORMACIÓN TÉCNICA DFT
-================================================================================
-
-Para cálculos DFT en Quantum ESPRESSO, los parámetros recomendados son:
-
-&CONTROL
-    calculation = 'scf'
-    restart_mode = 'from_scratch'
-    pseudo_dir = './pseudo/'
-    outdir = './tmp/'
-/
-
-&SYSTEM
-    ibrav = 0
-    nat = [número de átomos]
-    ntyp = [número de tipos de átomos]
-    ecutwfc = 60-70 Ry (dependiendo del elemento)
-    ecutrho = 4 * ecutwfc
-/
-
-&ELECTRONS
-    conv_thr = 1.0e-6
-    mixing_beta = 0.7
-/
-
-================================================================================
-                           NOTAS IMPORTANTES
-================================================================================
-
-1. Las predicciones con confianza ALTA (>70%) son químicamente viables.
-2. Las predicciones con confianza MEDIA (50-70%) requieren validación.
-3. Las predicciones con confianza BAJA (<50%) son hipotéticas.
-
-Para usar en nanoHUB:
-1. Copiar el output de la pestaña "nanoHUB"
-2. Pegar en la herramienta Quantum ESPRESSO de nanoHUB
-3. Seleccionar los pseudopotenciales correspondientes
-4. Ejecutar el cálculo
-
-================================================================================
-                     COSMICFORGE LAB - https://github.com/WilmerGaspar/cosmicforge-lab
-================================================================================
-"""
+        # Aproximación de estructura cristalina
+        if material:
+            formula = material.get("formula", "TiO2")
+            band_gap = material.get("band_gap", 0)
+            lines.append(f"\n🟡 Análisis del material {formula}:")
+            
+            # Aproximación de energía de banda
+            lines.append(f"   Band gap: {band_gap} eV")
+            if band_gap > 0:
+                wavelength = (self.constants["h"] * self.constants["c"]) / (band_gap * self.constants["e"])
+                lines.append(f"   Longitud de onda de absorción: λ = {wavelength*1e9:.1f} nm")
         
-        return pdf_content.encode('utf-8')
-
-# ============================================================================
-# IA QUE APRENDE CÁLCULOS DFT
-# ============================================================================
-
-class DFTLearningAI:
-    """
-    IA que aprende a hacer cálculos DFT correctos en Quantum ESPRESSO.
-    Aprende de errores, optimiza parámetros y mejora con cada iteración.
-    """
+        # Ecuación de onda
+        lines.append("\n🟡 Ecuación de Schrödinger (simplificada):")
+        lines.append("   Ĥψ = Eψ")
+        lines.append("   donde Ĥ = -ħ²/2m ∇² + V(r)")
+        lines.append("   Para estructura cristalina:")
+        lines.append("   E(k) = ħ²k²/2m* + E_gap")
+        
+        return lines
     
-    def __init__(self):
-        self.learning_memory = st.session_state.learning_memory
-        self.discovered = st.session_state.discovered_materials
-        self.dft_knowledge = st.session_state.dft_knowledge
-        self.dft_validations = st.session_state.dft_validations
+    def _chemistry_analysis(self, material: Dict, obj: Dict) -> List[str]:
+        lines = []
+        
+        if not material:
+            lines.append("\n⚠️ No hay material generado para análisis químico.")
+            return lines
+        
+        formula = material.get("formula", "TiO2")
+        elements = self._parse_formula(formula)
+        
+        lines.append(f"\n🧪 Fórmula molecular: {formula}")
+        
+        # Análisis de elementos
+        lines.append("\n📊 Composición elemental:")
+        for elem, count in elements.items():
+            if elem in PERIODIC_TABLE:
+                data = PERIODIC_TABLE[elem]
+                lines.append(f"   • {elem}: {data['name']}")
+                lines.append(f"     - Cantidad: {count}")
+                lines.append(f"     - Masa atómica: {data['mass']:.3f} u")
+                lines.append(f"     - Electronegatividad: {data['electronegativity']:.2f}")
+                lines.append(f"     - Estados de oxidación: {data['ox']}")
+        
+        # Valencia y enlace
+        lines.append("\n📊 Análisis de enlaces:")
+        if "O" in elements and len(elements) == 2:
+            metal = [e for e in elements if e != "O"][0]
+            if metal in PERIODIC_TABLE:
+                ox_states = PERIODIC_TABLE[metal]["ox"]
+                for ox in ox_states:
+                    # Calcular estequiometría neutra
+                    n_metal = abs(PERIODIC_TABLE["O"]["ox"][0])  # O siempre -2
+                    n_oxygen = abs(ox)
+                    from math import gcd
+                    g = gcd(n_metal, n_oxygen)
+                    n_metal //= g
+                    n_oxygen //= g
+                    charge = n_metal * ox + n_oxygen * (-2)
+                    if charge == 0:
+                        lines.append(f"   • {metal}({ox:+d}) + {n_oxygen}O(-2) → {metal}{n_metal if n_metal>1 else ''}O{n_oxygen if n_oxygen>1 else ''}")
+        
+        # Energía de formación
+        energy = material.get("energy", 0)
+        lines.append(f"\n📊 Energía de formación: {energy} eV/átomo")
+        lines.append(f"   {'✅ Material estable' if energy < -5 else '⚠️ Material metaestable'}")
+        
+        # Aplicaciones
+        apps = material.get("applications", [])
+        if apps:
+            lines.append(f"\n📊 Aplicaciones: {', '.join(apps)}")
+        
+        return lines
     
-    def learn(self, topic: str, information: str):
-        """La IA aprende nueva información."""
-        if topic not in self.learning_memory:
-            self.learning_memory[topic] = []
-        self.learning_memory[topic].append({
-            "info": information,
-            "timestamp": datetime.now().isoformat(),
-            "count": len(self.learning_memory.get(topic, [])) + 1
-        })
-        st.session_state.learning_memory = self.learning_memory
+    def _fibonacci_analysis(self, fib_data: List[Dict]) -> List[str]:
+        lines = []
+        
+        phi = self.constants["phi"]
+        
+        lines.append("\n🔢 SECUENCIA FIBONACCI EN MATERIALES:")
+        lines.append("   La naturaleza usa Fibonacci para optimizar estructuras.")
+        
+        lines.append("\n📊 Secuencia completa:")
+        fib = [1, 1]
+        for i in range(25):
+            fib.append(fib[-1] + fib[-2])
+        lines.append(f"   F = {fib}")
+        
+        lines.append("\n📊 Ratios consecutivos (convergencia a φ):")
+        for i in range(5, 12):
+            ratio = fib[i+1] / fib[i]
+            diff = abs(ratio - phi)
+            lines.append(f"   F({i+1})/F({i}) = {fib[i+1]}/{fib[i]} = {ratio:.10f} (Δφ = {diff:.2e})")
+        
+        lines.append("\n📊 Materiales predichos:")
+        for pred in fib_data[:10]:
+            confidence = pred.get("confidence", 0)
+            lines.append(f"   • {pred['formula']}: Ratio {pred['ratio']}, Confianza {confidence:.0%}")
+        
+        lines.append("\n📊 Aplicaciones de Fibonacci en cristalografía:")
+        lines.append("   • Cuasicristales (patrones 5-fold)")
+        lines.append("   • Redes Penrose")
+        lines.append("   • Estructuras icosaédricas")
+        lines.append("   • Espirales de Fermat en crecimiento cristalino")
+        
+        return lines
     
-    def learn_dft(self, topic: str, knowledge: Dict):
-        """Aprende conocimiento específico de DFT."""
-        if topic not in self.dft_knowledge:
-            self.dft_knowledge[topic] = []
-        self.dft_knowledge[topic].append({
-            **knowledge,
-            "timestamp": datetime.now().isoformat()
-        })
-        st.session_state.dft_knowledge = self.dft_knowledge
-    
-    def recall(self, topic: str) -> List[str]:
-        """La IA recuerda lo aprendido."""
-        return [item["info"] for item in self.learning_memory.get(topic, [])]
-    
-    def search_internet(self, query: str) -> Dict:
-        """Busca en Internet usando z-ai CLI."""
-        try:
-            result = subprocess.run(
-                ["z-ai", "function", "-n", "web_search", "-a", json.dumps({"query": query, "num": 5})],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            if result.returncode == 0:
-                return json.loads(result.stdout)
-        except Exception as e:
-            pass
-        return {"error": "No se pudo acceder a Internet", "results": []}
-    
-    def validate_dft_calculation(self, formula: str, params: Dict) -> Dict:
-        """
-        Valida parámetros DFT y sugiere correcciones basadas en aprendizaje.
-        """
-        validation_result = {
-            "valid": True,
-            "warnings": [],
-            "errors": [],
-            "suggestions": [],
-            "optimized_params": params.copy()
-        }
+    def _generate_diagrams(self, material: Dict) -> List[str]:
+        lines = []
         
-        # Verificar ecutwfc
-        elements = self._extract_elements(formula)
-        min_ecutwfc = max([DFT_KNOWLEDGE_BASE["ecutwfc_rules"].get(e, 60) for e in elements])
+        formula = material.get("formula", "TiO2") if material else "TiO2"
+        structure = material.get("structure", "rutile") if material else "rutile"
         
-        if params.get("ecutwfc", 60) < min_ecutwfc:
-            validation_result["warnings"].append(f"ecutwfc debería ser al menos {min_ecutwfc} Ry para {formula}")
-            validation_result["optimized_params"]["ecutwfc"] = min_ecutwfc
+        lines.append(f"\n🎨 Estructura cristalina de {formula}:")
         
-        # Verificar ecutrho
-        ecutwfc = params.get("ecutwfc", 60)
-        expected_ecutrho = ecutwfc * DFT_KNOWLEDGE_BASE["ecutrho_rules"]["multiplier"]
-        if params.get("ecutrho", expected_ecutrho) < expected_ecutrho:
-            validation_result["warnings"].append(f"ecutrho debería ser al menos {expected_ecutrho} Ry (4x ecutwfc)")
-            validation_result["optimized_params"]["ecutrho"] = expected_ecutrho
-        
-        # Verificar k-points
-        band_gap = MATERIALS_DATABASE.get(formula, {}).get("band_gap", 0)
-        if band_gap < 0.1:  # Metal
-            k_points = DFT_KNOWLEDGE_BASE["k_points_rules"]["metals"]
-            if params.get("k_points") != k_points:
-                validation_result["suggestions"].append(f"Para metales, usar k-points: {k_points}")
-        elif band_gap < 3:  # Semiconductor
-            k_points = DFT_KNOWLEDGE_BASE["k_points_rules"]["semiconductors"]
-            validation_result["suggestions"].append(f"Para semiconductores, k-points recomendados: {k_points}")
-        
-        # Aprender de esta validación
-        self.learn_dft("validations", {
-            "formula": formula,
-            "params": params,
-            "result": validation_result
-        })
-        
-        # Guardar en historial
-        st.session_state.dft_validations.append({
-            "formula": formula,
-            "params": params,
-            "result": validation_result,
-            "timestamp": datetime.now().isoformat()
-        })
-        
-        return validation_result
-    
-    def _extract_elements(self, formula: str) -> List[str]:
-        """Extrae elementos de una fórmula química."""
-        elements = []
-        current = ""
-        for char in formula:
-            if char.isupper():
-                if current:
-                    elements.append(current)
-                current = char
-            elif char.islower():
-                current += char
-            elif char.isdigit():
-                continue
-        if current:
-            elements.append(current)
-        return elements
-    
-    def generate_qe_input(self, formula: str, nebula_name: str, calculation_type: str = "scf") -> Dict:
-        """Genera input completo para Quantum ESPRESSO."""
-        
-        # Validar fórmula primero
-        elements = self._extract_elements(formula)
-        
-        # Obtener estructura
-        nanohub_gen = NanoHUBGenerator()
-        structure = nanohub_gen.generate(formula, nebula_name)
-        
-        # Parámetros DFT óptimos basados en aprendizaje
-        ecutwfc = max([DFT_KNOWLEDGE_BASE["ecutwfc_rules"].get(e, 60) for e in elements])
-        ecutrho = ecutwfc * 4
-        
-        # Determinar tipo de material para k-points
-        band_gap = MATERIALS_DATABASE.get(formula, {}).get("band_gap", 0)
-        if band_gap < 0.1:
-            k_points = DFT_KNOWLEDGE_BASE["k_points_rules"]["metals"]
-            smearing = "gaussian"
-            degauss = DFT_KNOWLEDGE_BASE["degauss_values"]["metals"]
+        # Diagrama ASCII de estructura
+        if structure == "rutile":
+            lines.append("""
+   ┌─────────────────────────────────────────┐
+   │     ESTRUCTURA RUTILE (TiO₂)            │
+   │                                         │
+   │        ●─────○─────●                    │
+   │       /│\\    │    /│\\                   │
+   │      ● │ ○───○───○ │ ●                  │
+   │       \\│/    │    \\│/                   │
+   │        ●─────○─────●                    │
+   │                                         │
+   │   ● = Ti (Titanio)                      │
+   │   ○ = O  (Oxígeno)                      │
+   │   Sistema: Tetragonal                   │
+   │   Grupo espacial: P4₂/mnm               │
+   └─────────────────────────────────────────┘
+""")
+        elif structure == "corundum":
+            lines.append("""
+   ┌─────────────────────────────────────────┐
+   │     ESTRUCTURA CORUNDUM (Fe₂O₃/Al₂O₃)   │
+   │                                         │
+   │          ●                              │
+   │         /|\\                             │
+   │        ○-●-○                            │
+   │         \\|/                             │
+   │          ●                              │
+   │         /|\\                             │
+   │        ○-●-○                            │
+   │                                         │
+   │   ● = Fe/Al    ○ = O                    │
+   │   Sistema: Trigonal                     │
+   │   Grupo espacial: R-3c                  │
+   └─────────────────────────────────────────┘
+""")
+        elif structure == "wurtzite":
+            lines.append("""
+   ┌─────────────────────────────────────────┐
+   │     ESTRUCTURA WURTZITE (ZnO)           │
+   │                                         │
+   │        ●     ●                          │
+   │         \\   /                           │
+   │          ○ ○                            │
+   │          | |                            │
+   │        ●     ●                          │
+   │         \\   /                           │
+   │          ○ ○                            │
+   │                                         │
+   │   ● = Zn    ○ = O                       │
+   │   Sistema: Hexagonal                    │
+   │   Grupo espacial: P6₃mc                 │
+   └─────────────────────────────────────────┘
+""")
         else:
-            k_points = DFT_KNOWLEDGE_BASE["k_points_rules"]["semiconductors"]
-            smearing = "gaussian"
-            degauss = DFT_KNOWLEDGE_BASE["degauss_values"]["semiconductors"]
+            lines.append(f"""
+   ┌─────────────────────────────────────────┐
+   │     ESTRUCTURA {structure.upper():20s}   │
+   │                                         │
+   │        ●───○───●                        │
+   │        │   │   │                        │
+   │        ○───●───○                        │
+   │        │   │   │                        │
+   │        ●───○───●                        │
+   │                                         │
+   └─────────────────────────────────────────┘
+""")
         
-        # Generar pseudopotenciales
-        pseudo_lines = []
-        for elem in elements:
-            if elem in PSEUDOPOTENTIALS:
-                pseudo_lines.append(f"  {elem} {PSEUDOPOTENTIALS[elem]['name']}")
+        # Celda unitaria
+        lines.append("\n🎨 Celda unitaria en coordenadas cristalinas:")
+        lines.append("""
+   z
+   │
+   │    ●─────●
+   │   /│    /│
+   │  ●─────● │
+   │  │ ●───│─●
+   │  │/    │/
+   │  ●─────●───── y
+   │ /
+   ●x
+""")
         
-        # Construir input QE
-        qe_input = f"""&CONTROL
-    calculation = '{calculation_type}'
-    restart_mode = 'from_scratch'
-    prefix = '{formula}'
-    outdir = './tmp/'
-    pseudo_dir = './pseudo/'
-/
-
-&SYSTEM
-    ibrav = 0
-    nat = {structure['nat']}
-    ntyp = {len(elements)}
-    ecutwfc = {ecutwfc}.0
-    ecutrho = {ecutrho}.0
-/
-
-&ELECTRONS
-    conv_thr = 1.0e-6
-    mixing_beta = 0.7
-    electron_maxstep = 100
-/
-
-ATOMIC_SPECIES
-{chr(10).join(pseudo_lines)}
-
-CELL_PARAMETERS angstrom
-{structure['cell_vectors']}
-
-ATOMIC_POSITIONS crystal
-{structure['atomic_structure']}
-
-K_POINTS automatic
-{k_points[0]} {k_points[1]} {k_points[2]} 0 0 0
-"""
-        
-        return {
-            "qe_input": qe_input,
-            "nanohub_output": structure["full_output"],
-            "ecutwfc": ecutwfc,
-            "ecutrho": ecutrho,
-            "k_points": k_points,
-            "smearing": smearing,
-            "degauss": degauss,
-            "pseudopotentials": {e: PSEUDOPOTENTIALS.get(e, {}) for e in elements},
-            "valid": self.validate_dft_calculation(formula, {"ecutwfc": ecutwfc, "ecutrho": ecutrho, "k_points": k_points})
-        }
+        return lines
     
-    def learn_from_error(self, error_type: str, error_message: str, correction: str):
-        """Aprende de un error en cálculo DFT."""
-        knowledge = {
-            "error_type": error_type,
-            "error_message": error_message,
-            "correction": correction,
-        }
+    def _dft_parameters(self, material: Dict) -> List[str]:
+        lines = []
         
-        # Agregar a la base de conocimiento
-        if error_type not in DFT_KNOWLEDGE_BASE["learned_corrections"]:
-            DFT_KNOWLEDGE_BASE["learned_corrections"].append(knowledge)
+        formula = material.get("formula", "TiO2") if material else "TiO2"
+        elements = self._parse_formula(formula)
         
-        # Aprender
-        self.learn_dft("error_corrections", knowledge)
-        self.learn(error_type, f"Error: {error_message} → Corrección: {correction}")
+        lines.append(f"\n⚙️  Parámetros DFT para {formula}:")
+        
+        # ecutwfc
+        ecutwfc_values = {"Ti": 70, "Fe": 65, "O": 55, "Al": 45, "Si": 45, "Zn": 60, "Cu": 60, "Ni": 60}
+        max_ecutwfc = max([ecutwfc_values.get(e, 60) for e in elements.keys()])
+        
+        lines.append(f"\n   &SYSTEM")
+        lines.append(f"      ecutwfc = {max_ecutwfc}.0  ! Ry")
+        lines.append(f"      ecutrho = {max_ecutwfc * 4}.0  ! Ry (4× ecutwfc)")
+        lines.append(f"   /")
+        
+        # K-points
+        band_gap = material.get("band_gap", 3.2) if material else 3.2
+        if band_gap < 0.5:
+            k_points = [12, 12, 12]
+            lines.append(f"\n   K_POINTS: {k_points} (metal)")
+        elif band_gap < 4:
+            k_points = [8, 8, 8]
+            lines.append(f"\n   K_POINTS: {k_points} (semiconductor)")
+        else:
+            k_points = [6, 6, 6]
+            lines.append(f"\n   K_POINTS: {k_points} (aislante)")
+        
+        # Pseudopotenciales
+        lines.append("\n   ATOMIC_SPECIES:")
+        for elem in elements.keys():
+            lines.append(f"      {elem}  {elem}.pbe-spn-kjpaw_psl.1.0.0.UPF")
+        
+        return lines
     
-    def query_materials_project(self, formula: str, api_key: str = None) -> Dict:
-        """Consulta Materials Project API."""
-        mp_api = MaterialsProjectAPI()
-        result = mp_api.query_material(formula, api_key)
+    def _parse_formula(self, formula: str) -> Dict[str, int]:
+        """Parsea una fórmula química y retorna elementos con sus cantidades."""
+        elements = {}
+        pattern = r'([A-Z][a-z]?)(\d*)'
+        matches = re.findall(pattern, formula)
         
-        if result.get("status") in ["success", "found_local"]:
-            # Aprender del resultado
-            data = result.get("data", {})
-            self.learn(formula, f"MP: {data.get('name', formula)}, band_gap={data.get('band_gap', '?')} eV")
+        for elem, count in matches:
+            if elem:
+                elements[elem] = int(count) if count else 1
         
-        return result
-    
-    def query_all_databases(self, formula: str) -> Dict:
-        """Consulta todas las bases de datos disponibles."""
-        results = {
-            "Materials Project": self.query_materials_project(formula),
-            "AFLOW": {"status": "queried", "source": "AFLOW"},
-            "OQMD": {"status": "queried", "source": "OQMD"},
-            "COD": {"status": "queried", "source": "COD"},
-            "NOMAD": {"status": "queried", "source": "NOMAD"},
-            "MPDS": {"status": "queried", "source": "MPDS"}
-        }
-        
-        # Aprender
-        found_count = sum(1 for r in results.values() if r.get("status") in ["success", "found", "found_local"])
-        self.learn(formula, f"Consultado en {len(results)} BD, encontrado en {found_count}")
-        
-        return results
-    
-    def discover_new_material(self, elem1: str, elem2: str, ratio: str) -> Dict:
-        """Descubre un nuevo material."""
-        formula = f"{elem1}_{elem2}_{ratio}"
-        
-        for d in self.discovered:
-            if d["formula"] == formula:
-                return d
-        
-        discovery = {
-            "formula": formula,
-            "elements": [elem1, elem2],
-            "ratio": ratio,
-            "discovery_date": datetime.now().isoformat(),
-            "status": "hypothetical",
-            "confidence": self._calculate_confidence(elem1, elem2)
-        }
-        
-        self.discovered.append(discovery)
-        st.session_state.discovered_materials = self.discovered
-        self.learn("new_materials", f"Descubierto: {formula} ({discovery['confidence']:.0%} confianza)")
-        
-        return discovery
-    
-    def _calculate_confidence(self, elem1: str, elem2: str) -> float:
-        compatible_pairs = [
-            ("Ti", "O"), ("Fe", "O"), ("Al", "O"), ("Si", "O"),
-            ("Zn", "O"), ("Cu", "O"), ("Ni", "O"), ("Co", "O"),
-            ("Ti", "Fe"), ("Fe", "Ni"), ("Al", "Si")
-        ]
-        
-        if (elem1, elem2) in compatible_pairs or (elem2, elem1) in compatible_pairs:
-            return 0.85
-        
-        if elem1 in PERIODIC_TABLE and elem2 in PERIODIC_TABLE:
-            ox1 = PERIODIC_TABLE[elem1]["ox"]
-            ox2 = PERIODIC_TABLE[elem2]["ox"]
-            for o1 in ox1:
-                for o2 in ox2:
-                    if o1 * o2 < 0:
-                        return 0.7
-        
-        return 0.5
-    
-    def generate_response(self, user_input: str, context: Dict = None) -> str:
-        """Genera respuesta inteligente."""
-        lower = user_input.lower()
-        
-        # Revisar memoria
-        for topic in self.learning_memory:
-            if topic.lower() in lower:
-                memories = self.recall(topic)
-                if memories:
-                    return f"📚 **De mi memoria aprendida sobre {topic}:**\n\n" + "\n".join([f"• {m}" for m in memories[-3:]])
-        
-        if "dft" in lower or "quantum espresso" in lower or "cálculo" in lower:
-            return self._dft_analysis(context)
-        
-        if "nebulosa" in lower or "nebula" in lower:
-            return self._analyze_nebula(context)
-        
-        if "busca" in lower or "internet" in lower:
-            return self._search_and_learn(user_input)
-        
-        if "nuevo" in lower or "descubr" in lower:
-            return self._discover_mode(context)
-        
-        if "industria" in lower or "aplicación" in lower:
-            return self._industrial_analysis(context)
-        
-        if "fibonacci" in lower:
-            return self._fibonacci_analysis(context)
-        
-        if "materials project" in lower or "base de datos" in lower:
-            return self._database_analysis(context)
-        
-        if "error" in lower or "falló" in lower or "problema" in lower:
-            return self._error_analysis(user_input)
-        
-        if "por qué" in lower or "rechaz" in lower:
-            return self._explain_rejection(user_input)
-        
-        self.learn("user_queries", user_input)
-        return self._contextual_response(user_input, context)
-    
-    def _dft_analysis(self, context: Dict) -> str:
-        """Análisis especializado en DFT."""
-        return """🧪 **Análisis DFT - Quantum ESPRESSO**
-
-**He aprendido estos parámetros óptimos:**
-
-**Energía de corte (ecutwfc):**
-• Ti: 70 Ry | Fe: 65 Ry | O: 55 Ry | Al/Si: 45 Ry
-
-**Reglas de convergencia:**
-• ecutrho = 4 × ecutwfc (siempre)
-• conv_thr = 1e-6 para SCF
-• mixing_beta = 0.7 (reducir si no converge)
-
-**K-points recomendados:**
-• Metales: 12×12×12
-• Semiconductores: 8×8×8
-• Aislantes: 6×6×6
-
-**Errores comunes que he aprendido:**
-• "convergence not achieved" → Aumentar ecutwfc
-• "negative occupations" → Usar smearing gaussian
-• "too many bands" → Verificar occupancies
-
-**Para cálculos correctos en nanoHUB:**
-1. Usar los parámetros generados automáticamente
-2. El sistema ya incluye validación
-3. Puedo aprender de tus errores específicos"""
-
-    def _analyze_nebula(self, context: Dict) -> str:
-        if not context or not context.get("nebula"):
-            return "Selecciona una nebulosa para analizar."
-        
-        n = context["nebula"]
-        name = n.get("name", "Unknown")
-        temp = n.get("temperature_K", 0)
-        metal = n.get("metal_dominant", "?")
-        
-        self.learn(name, f"T={temp}K, metal={metal}")
-        
-        formula = f"{metal}O2"
-        db_results = self.query_all_databases(formula)
-        
-        found = sum(1 for r in db_results.values() if r.get("status") in ["success", "found", "found_local"])
-        
-        return f"""🌌 **Análisis de {name}**
-
-**Datos astronómicos:**
-• Tipo: {n.get('type')}
-• Temperatura: {temp:,} K
-• Elemento dominante: {metal}
-
-**Transformación cristalina:**
-• Fórmula base: {formula}
-• Estado de oxidación: {self._get_ox_state(metal, temp)}
-
-**Bases de datos consultadas:** {found}/6 confirman
-
-**Parámetros DFT óptimos:**
-• ecutwfc: {DFT_KNOWLEDGE_BASE['ecutwfc_rules'].get(metal, 60)} Ry
-• k-points: Semiconductor (band_gap > 3 eV)"""
-
-    def _get_ox_state(self, metal: str, temp: float) -> str:
-        if temp > 10000:
-            return f"{metal}⁴⁺" if metal in ["Ti", "Si"] else f"{metal}³⁺"
-        return f"{metal}³⁺" if metal in ["Ti", "Fe"] else f"{metal}²⁺"
-    
-    def _search_and_learn(self, query: str) -> str:
-        search_terms = query.replace("busca", "").replace("internet", "").strip()
-        if not search_terms:
-            search_terms = "materiales cuánticos DFT última investigación"
-        
-        results = self.search_internet(search_terms)
-        
-        if "error" in results:
-            return f"⚠️ {results['error']}"
-        
-        if isinstance(results, list) and len(results) > 0:
-            for r in results[:3]:
-                if isinstance(r, dict) and r.get("snippet"):
-                    self.learn(search_terms, r["snippet"][:200])
-            
-            response = f"🔍 **Resultados para: '{search_terms}'**\n\n"
-            for i, r in enumerate(results[:5], 1):
-                if isinstance(r, dict):
-                    response += f"**{i}. {r.get('name', 'Sin título')}**\n"
-                    response += f"   {r.get('snippet', '')[:150]}...\n\n"
-            
-            response += "\n📚 **He aprendido esta información.**"
-            return response
-        
-        return "No encontré resultados."
-    
-    def _discover_mode(self, context: Dict) -> str:
-        return """🔬 **Modo Descubrimiento**
-
-**Métodos disponibles:**
-1. **Fibonacci** - Proporciones matemáticas
-2. **Combinatoria** - Elementos compatibles
-3. **Nebulosa** - Datos astronómicos
-
-**La IA aprende de cada descubrimiento.**
-Ve a la pestaña "Fibonacci" para generar nuevos materiales."""
-
-    def _industrial_analysis(self, context: Dict) -> str:
-        formula = "TiO2"
-        if context and context.get("material"):
-            formula = context["material"].get("formula", "TiO2")
-        
-        response = f"🏭 **Aplicaciones Industriales de {formula}**\n\n"
-        
-        for industry, data in INDUSTRIES.items():
-            if formula in data.get("materials", []):
-                response += f"**{industry}:**\n"
-                for app in data.get("applications", []):
-                    response += f"  • {app}\n"
-                response += "\n"
-        
-        self.learn(formula + "_industrial", "Aplicaciones analizadas")
-        return response
-    
-    def _fibonacci_analysis(self, context: Dict) -> str:
-        return """🔢 **Generador Fibonacci**
-
-**Secuencia:** 1, 1, 2, 3, 5, 8, 13, 21...
-
-**Aplicación a materiales:**
-• Ratio 1:1 → AB (ej: TiO)
-• Ratio 2:3 → A₂B₃ (ej: Ti₂O₃)
-• Ratio 5:8 → A₅B₈ (hipotético)
-
-**PDF descargable disponible** en la pestaña Fibonacci."""
-
-    def _database_analysis(self, context: Dict) -> str:
-        return """📚 **Bases de Datos Integradas**
-
-**1. Materials Project** - 150K+ materiales
-**2. AFLOW** - 3.5M+ estructuras
-**3. OQMD** - 800K+ materiales
-**4. COD** - 500K+ estructuras
-**5. NOMAD** - Datos DFT reproducibles
-**6. MPDS** - Datos experimentales
-
-Consulta automática al generar materiales."""
-
-    def _error_analysis(self, message: str) -> str:
-        """Analiza errores DFT y sugiere correcciones."""
-        lower = message.lower()
-        
-        corrections = []
-        for correction in DFT_KNOWLEDGE_BASE.get("learned_corrections", []):
-            if correction["error_type"].lower() in lower:
-                corrections.append(correction)
-        
-        if corrections:
-            response = "🔧 **Errores detectados y correcciones aprendidas:**\n\n"
-            for c in corrections:
-                response += f"• **{c['error_type']}**: {c['correction']}\n"
-            return response
-        
-        return """🔧 **Análisis de Errores DFT**
-
-He aprendido a identificar estos errores comunes:
-
-1. **"convergence not achieved"**
-   → Aumentar ecutwfc o reducir mixing_beta
-
-2. **"negative occupations"**
-   → Usar smearing='gaussian' con degauss=0.02
-
-3. **"too many bands"**
-   → Verificar nbnd parameter
-
-Cuéntame tu error específico y aprenderé a resolverlo."""
-
-    def _explain_rejection(self, message: str) -> str:
-        if "ti2o" in message.lower():
-            return """❌ **Ti₂O es QUÍMICAMENTE INVÁLIDO**
-
-**Explicación:**
-• Ti tiene estados de oxidación: Ti⁴⁺, Ti³⁺, Ti²⁺
-• Ti₂O requeriría Ti⁺ → NO EXISTE
-
-**Corrección automática:**
-• TiO₂ (Ti⁴⁺) - ESTABLE ✅
-• Ti₂O₃ (Ti³⁺) - ESTABLE ✅
-• TiO (Ti²⁺) - METASTABLE ⚠️
-
-La IA aprende y evita estos errores."""
-
-        return "El sistema corrige automáticamente fórmulas inválidas."
-
-    def _contextual_response(self, message: str, context: Dict) -> str:
-        self.learn("conversación", message)
-        
-        return f"""🧠 **He aprendido tu pregunta:** "{message}"
-
-Puedo ayudarte con:
-• 🧪 **Cálculos DFT** y Quantum ESPRESSO
-• 🌌 **Análisis de nebulosas**
-• 🔬 **Descubrimiento de materiales**
-• 🔢 **Generación Fibonacci**
-• 📚 **Consulta a bases de datos**
-• 🔧 **Solución de errores DFT**
-
-¿Qué necesitas?"""
+        return elements
 
 # ============================================================================
-# GENERADOR NANOHUB
+# CLASE PRINCIPAL DE LA APLICACIÓN
 # ============================================================================
 
-class NanoHUBGenerator:
-    def generate(self, formula: str, nebula_name: str) -> Dict:
-        structures = {
-            "TiO2": {"atoms": [("Ti", 0.0, 0.0, 0.0), ("Ti", 0.5, 0.5, 0.5), ("O", 0.3053, 0.3053, 0.0), ("O", 0.6947, 0.6947, 0.0), ("O", 0.8053, 0.1947, 0.5), ("O", 0.1947, 0.8053, 0.5)]},
-            "Fe2O3": {"atoms": [("Fe", 0.0, 0.0, 0.0), ("Fe", 0.0, 0.0, 0.333), ("Fe", 0.333, 0.667, 0.167), ("Fe", 0.667, 0.333, 0.5), ("O", 0.306, 0.0, 0.083), ("O", 0.0, 0.306, 0.083), ("O", 0.694, 0.0, 0.25), ("O", 0.0, 0.694, 0.25), ("O", 0.306, 0.0, 0.417), ("O", 0.0, 0.306, 0.417)]},
-            "Al2O3": {"atoms": [("Al", 0.0, 0.0, 0.0), ("Al", 0.0, 0.0, 0.333), ("Al", 0.333, 0.667, 0.167), ("Al", 0.667, 0.333, 0.5), ("O", 0.306, 0.0, 0.083), ("O", 0.0, 0.306, 0.083), ("O", 0.694, 0.0, 0.25), ("O", 0.0, 0.694, 0.25), ("O", 0.306, 0.0, 0.417), ("O", 0.0, 0.306, 0.417)]},
-            "SiO2": {"atoms": [("Si", 0.0, 0.0, 0.0), ("Si", 0.5, 0.5, 0.0), ("O", 0.414, 0.207, 0.0), ("O", 0.207, 0.414, 0.0), ("O", 0.793, 0.586, 0.0), ("O", 0.586, 0.793, 0.0)]},
-            "ZnO": {"atoms": [("Zn", 0.333, 0.667, 0.0), ("Zn", 0.667, 0.333, 0.5), ("O", 0.333, 0.667, 0.375), ("O", 0.667, 0.333, 0.875)]},
-        }
-        
-        struct = structures.get(formula, {"atoms": [("X", 0.0, 0.0, 0.0), ("O", 0.5, 0.5, 0.5)]})
-        atoms = struct["atoms"]
-        nat = len(atoms)
-        title = f"{formula} - {nebula_name} - ESTABLE"
-        
-        atomic_lines = [f"{a[0]} {a[1]:.10f} {a[2]:.10f} {a[3]:.10f}" for a in atoms]
-        atomic_structure = "\n".join(atomic_lines)
-        
-        lattice = 4.594 if "Ti" in formula else 5.038 if "Fe" in formula else 4.759
-        cell_vectors = f"{lattice:.6f} 0.000000 0.000000\n0.000000 {lattice:.6f} 0.000000\n0.000000 0.000000 {lattice*0.644:.6f}"
-        
-        full_output = f"{nat}\n{title}\n{atomic_structure}"
-        
-        return {
-            "nat": nat,
-            "title": title,
-            "formula": formula,
-            "atomic_structure": atomic_structure,
-            "cell_vectors": cell_vectors,
-            "full_output": full_output,
-            "lattice_a": lattice
-        }
-
-# ============================================================================
-# FIBONACCI GENERATOR
-# ============================================================================
-
-class FibonacciMaterials:
+class CosmicForgeLab:
+    """Sistema principal CosmicForge Lab v4.4."""
+    
     def __init__(self):
-        self.fib = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
+        self.report_gen = ScientificReportGenerator()
     
-    def generate_combinations(self, elem1: str, elem2: str) -> List[Dict]:
-        results = []
+    def get_cosmic_object(self, name: str) -> Dict:
+        """Obtiene datos de un objeto cósmico."""
+        # Limpiar el nombre de emojis
+        clean_name = name.split(" ", 1)[-1] if " " in name else name
         
-        for i, f1 in enumerate(self.fib[:8]):
-            for j, f2 in enumerate(self.fib[:8]):
+        # Buscar en todas las categorías
+        for db in [NEBULAS_EMISSION, NEBULAS_SUPERNOVA, NEBULAS_DARK, 
+                   NEBULAS_REFLECTION, NEBULAS_PLANETARY, STELLAR_SYSTEMS, GALAXIES]:
+            if clean_name in db:
+                data = db[clean_name].copy()
+                data["name"] = clean_name
+                return data
+        
+        return {"name": clean_name, "type": "desconocido"}
+    
+    def generate_material(self, cosmic_object: Dict) -> Dict:
+        """Genera material basado en objeto cósmico."""
+        metal = cosmic_object.get("metal_dominant", "Ti")
+        temp = cosmic_object.get("temperature_K", 10000)
+        
+        # Determinar fórmula según temperatura
+        if temp > 15000:
+            formula = f"{metal}O2"
+        elif temp > 8000:
+            formula = f"{metal}2O3"
+        elif temp > 1000:
+            formula = f"{metal}O"
+        else:
+            formula = f"{metal}C"
+        
+        # Buscar en base de datos
+        if formula in MATERIALS_DATABASE:
+            return {"formula": formula, **MATERIALS_DATABASE[formula]}
+        
+        return {"formula": formula, "name": f"Material de {metal}", "energy": -7.0, "band_gap": 3.0}
+    
+    def generate_nanohub_output(self, formula: str, nebula_name: str) -> str:
+        """Genera output para nanoHUB."""
+        structures = {
+            "TiO2": [("Ti", 0.0, 0.0, 0.0), ("Ti", 0.5, 0.5, 0.5), 
+                     ("O", 0.3053, 0.3053, 0.0), ("O", 0.6947, 0.6947, 0.0),
+                     ("O", 0.8053, 0.1947, 0.5), ("O", 0.1947, 0.8053, 0.5)],
+            "Fe2O3": [("Fe", 0.0, 0.0, 0.0), ("Fe", 0.0, 0.0, 0.333), ("Fe", 0.333, 0.667, 0.167), ("Fe", 0.667, 0.333, 0.5),
+                      ("O", 0.306, 0.0, 0.083), ("O", 0.0, 0.306, 0.083), ("O", 0.694, 0.0, 0.25), ("O", 0.0, 0.694, 0.25)],
+            "Al2O3": [("Al", 0.0, 0.0, 0.0), ("Al", 0.0, 0.0, 0.333), ("Al", 0.333, 0.667, 0.167), ("Al", 0.667, 0.333, 0.5),
+                      ("O", 0.306, 0.0, 0.083), ("O", 0.0, 0.306, 0.083), ("O", 0.694, 0.0, 0.25), ("O", 0.0, 0.694, 0.25)],
+        }
+        
+        atoms = structures.get(formula, [("X", 0.0, 0.0, 0.0), ("O", 0.5, 0.5, 0.5)])
+        nat = len(atoms)
+        
+        lines = [str(nat), f"{formula} - {nebula_name} - ESTABLE"]
+        for atom in atoms:
+            lines.append(f"{atom[0]} {atom[1]:.10f} {atom[2]:.10f} {atom[3]:.10f}")
+        
+        return "\n".join(lines)
+    
+    def generate_fibonacci_predictions(self, elem1: str, elem2: str) -> List[Dict]:
+        """Genera predicciones Fibonacci."""
+        fib = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+        predictions = []
+        
+        for f1 in fib[:7]:
+            for f2 in fib[:7]:
                 if f1 <= 8 and f2 <= 8:
-                    formula = self._make_formula(elem1, f1, elem2, f2)
-                    confidence = self._validate(formula, elem1, elem2, f1, f2)
+                    formula = f"{elem1}{f1 if f1 > 1 else ''}{elem2}{f2 if f2 > 1 else ''}"
+                    confidence = self._calculate_confidence(elem1, elem2, f1, f2)
                     
                     if confidence > 0.4:
-                        results.append({
+                        predictions.append({
                             "formula": formula,
                             "ratio": f"{f1}:{f2}",
-                            "fib_indices": (i, j),
                             "confidence": confidence,
                             "fib_product": f1 * f2
                         })
         
-        results.sort(key=lambda x: (-x["confidence"], x["fib_product"]))
+        predictions.sort(key=lambda x: -x["confidence"])
         
+        # Eliminar duplicados
         seen = set()
         unique = []
-        for r in results:
-            if r["formula"] not in seen:
-                seen.add(r["formula"])
-                unique.append(r)
+        for p in predictions:
+            if p["formula"] not in seen:
+                seen.add(p["formula"])
+                unique.append(p)
         
-        return unique[:10]
+        return unique[:12]
     
-    def _make_formula(self, e1: str, n1: int, e2: str, n2: int) -> str:
-        f = ""
-        f += e1
-        if n1 > 1:
-            f += str(n1)
-        f += e2
-        if n2 > 1:
-            f += str(n2)
-        return f
-    
-    def _validate(self, formula: str, e1: str, e2: str, n1: int, n2: int) -> float:
+    def _calculate_confidence(self, e1: str, e2: str, n1: int, n2: int) -> float:
+        """Calcula confianza química."""
         compatible = [
             ("Ti", "O"), ("Fe", "O"), ("Al", "O"), ("Si", "O"),
-            ("Zn", "O"), ("Cu", "O"), ("Ni", "O"), ("Co", "O")
+            ("Zn", "O"), ("Cu", "O"), ("Ni", "O"), ("Co", "O"), ("C", "O")
         ]
         
         if (e1, e2) in compatible or (e2, e1) in compatible:
-            # Verificar estequiometría válida
-            if e2 == "O":
-                # Para óxidos, verificar que la carga sea neutra
-                if e1 in PERIODIC_TABLE:
-                    ox_states = PERIODIC_TABLE[e1]["ox"]
-                    for ox in ox_states:
-                        # Carga total = n1 * ox_metal + n2 * (-2)
-                        total_charge = n1 * ox + n2 * (-2)
-                        if abs(total_charge) < 0.01:  # Carga neutra
-                            return 0.95  # Muy alta confianza
-                    # Si no hay carga neutra exacta
-                    return 0.6
-            return 0.7
+            # Verificar carga neutra
+            if e2 == "O" and e1 in PERIODIC_TABLE:
+                for ox in PERIODIC_TABLE[e1]["ox"]:
+                    if ox > 0:  # Metal positivo
+                        total = n1 * ox + n2 * (-2)
+                        if abs(total) < 0.01:
+                            return 0.95  # Carga perfecta
+            return 0.75
         
         return 0.3
-    
-    def get_fibonacci_sequence(self, n: int = 12) -> List[int]:
-        """Retorna la secuencia Fibonacci."""
-        return self.fib[:n]
 
 # ============================================================================
-# INTERFAZ PRINCIPAL
+# INTERFAZ STREAMLIT
 # ============================================================================
 
 def main():
-    # Sidebar
+    # Configuración de tema
     theme_name = st.sidebar.selectbox("🎨 Tema", list(THEMES.keys()))
     apply_theme(theme_name)
     
-    # API Key input
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🔑 Materials Project API")
-    mp_api_key = st.sidebar.text_input("API Key (opcional):", type="password")
-    
-    # Inicializar clases
-    ai = DFTLearningAI()
-    nanohub_gen = NanoHUBGenerator()
-    fib_gen = FibonacciMaterials()
-    pdf_gen = PDFGenerator()
+    # Inicializar
+    forge = CosmicForgeLab()
     
     # Header
-    st.title("🧠 CosmicForge Lab v4.3")
-    st.markdown("<p style='text-align:center;opacity:0.7;'>IA que APRENDE cálculos DFT + Materials Project API + Fibonacci PDF</p>", unsafe_allow_html=True)
+    st.title("🌌 CosmicForge Lab v4.4")
+    st.markdown("""
+    <p style='text-align:center;opacity:0.7;'>
+    El Universo como Guía de Fabricación de Materiales<br>
+    <b>Reportes:</b> Matemática + Física + Química + Diagramas + Fibonacci
+    </p>
+    """, unsafe_allow_html=True)
     
-    # Indicadores
-    memory_count = len(st.session_state.learning_memory)
-    discovered_count = len(st.session_state.discovered_materials)
-    dft_count = len(st.session_state.dft_knowledge)
+    # Estadísticas
+    total_objects = len(ALL_COSMIC_OBJECTS)
+    total_elements = len(PERIODIC_TABLE)
+    total_materials = len(MATERIALS_DATABASE)
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("🧠 Temas Aprendidos", memory_count)
+        st.metric("🌌 Objetos Cósmicos", total_objects)
     with col2:
-        st.metric("🔬 Materiales Descubiertos", discovered_count)
+        st.metric("⚛️ Elementos", total_elements)
     with col3:
-        st.metric("📐 Conocimiento DFT", dft_count)
+        st.metric("🧪 Materiales", total_materials)
+    with col4:
+        st.metric("📐 Fibonacci", "∞")
     
-    # Tabs
-    tabs = st.tabs(["🌠 Nebulosas", "🔬 Materiales", "🚀 nanoHUB/DFT", "💬 IA Aprendizaje", "🔢 Fibonacci", "🌐 Internet", "📊 Memoria"])
+    # Tabs principales
+    tabs = st.tabs([
+        "🌌 Universo", 
+        "🔬 Materiales", 
+        "🚀 nanoHUB", 
+        "📊 Reporte Científico",
+        "🔢 Fibonacci",
+        "💬 IA Asistente"
+    ])
     
-    # TAB 1: NEBULOSAS
+    # TAB 1: UNIVERSO
     with tabs[0]:
-        st.header("Selección de Nebulosa")
+        st.header("🔭 Explora el Universo")
         
-        col1, col2 = st.columns([1, 2])
+        # Filtro por tipo
+        filter_type = st.selectbox(
+            "Filtrar por tipo:",
+            ["Todos", "Nebulosas de Emisión", "Supernovas", "Nebulosas Oscuras", 
+             "Nebulosas de Reflexión", "Nebulosas Planetarias", "Sistemas Estelares", "Galaxias"]
+        )
         
-        with col1:
-            nebula_name = st.selectbox("Nebulosa:", list(NEBULAS_DATABASE.keys()))
+        if filter_type == "Todos":
+            objects_dict = ALL_COSMIC_OBJECTS
+        elif filter_type == "Nebulosas de Emisión":
+            objects_dict = {f"🌌 {k}": v for k, v in NEBULAS_EMISSION.items()}
+        elif filter_type == "Supernovas":
+            objects_dict = {f"💥 {k}": v for k, v in NEBULAS_SUPERNOVA.items()}
+        elif filter_type == "Nebulosas Oscuras":
+            objects_dict = {f"🌑 {k}": v for k, v in NEBULAS_DARK.items()}
+        elif filter_type == "Nebulosas de Reflexión":
+            objects_dict = {f"✨ {k}": v for k, v in NEBULAS_REFLECTION.items()}
+        elif filter_type == "Nebulosas Planetarias":
+            objects_dict = {f"💫 {k}": v for k, v in NEBULAS_PLANETARY.items()}
+        elif filter_type == "Sistemas Estelares":
+            objects_dict = {f"⭐ {k}": v for k, v in STELLAR_SYSTEMS.items()}
+        elif filter_type == "Galaxias":
+            objects_dict = {f"🌀 {k}": v for k, v in GALAXIES.items()}
+        else:
+            objects_dict = ALL_COSMIC_OBJECTS
+        
+        # Selección
+        selected = st.selectbox("Selecciona un objeto cósmico:", list(objects_dict.keys()))
+        
+        if st.button("🔍 Analizar Objeto Cósmico", type="primary"):
+            st.session_state.cosmic_object = forge.get_cosmic_object(selected)
+            st.success(f"✅ {selected} analizado")
+        
+        # Mostrar información
+        if st.session_state.cosmic_object:
+            obj = st.session_state.cosmic_object
             
-            if st.button("🔍 Cargar y Consultar APIs", type="primary"):
-                data = NEBULAS_DATABASE[nebula_name].copy()
-                data["name"] = nebula_name
-                st.session_state.nebula_data = data
-                
-                formula = f"{data['metal_dominant']}O2"
-                st.session_state.api_results = ai.query_all_databases(formula)
-                
-                st.success(f"✅ {nebula_name} cargada")
-        
-        with col2:
-            if st.session_state.nebula_data:
-                data = st.session_state.nebula_data
-                
+            col1, col2 = st.columns([1, 2])
+            
+            with col1:
                 st.markdown(f"""
                 <div class="card">
-                    <h3>{nebula_name}</h3>
-                    <p><strong>Tipo:</strong> {data.get('type')}</p>
-                    <p><strong>Temperatura:</strong> {data.get('temperature_K'):,} K</p>
-                    <p><strong>Metal:</strong> {data.get('metal_dominant')}</p>
-                    <p><strong>Elementos:</strong> {', '.join(data.get('detected_elements', []))}</p>
+                    <h3>{obj.get('name')}</h3>
+                    <p><b>Tipo:</b> {obj.get('type')}</p>
+                    <p><b>Constelación:</b> {obj.get('constellation', 'N/A')}</p>
+                    <p><b>Distancia:</b> {obj.get('distance_ly', 0):,} años luz</p>
+                    <p><b>Temperatura:</b> {obj.get('temperature_K', 0):,} K</p>
+                    <p><b>Metal dominante:</b> {obj.get('metal_dominant')}</p>
+                    <p><b>Elementos:</b> {', '.join(obj.get('detected_elements', []))}</p>
+                    <p><b>Tamaño:</b> {obj.get('size_ly', 0)} años luz</p>
                 </div>
                 """, unsafe_allow_html=True)
-                
-                if st.session_state.api_results:
-                    st.markdown("**Resultados de APIs:**")
-                    for api, result in st.session_state.api_results.items():
-                        status = result.get("status", "?")
-                        icon = "✅" if status in ["success", "found", "found_local"] else "❓" if status == "queried" else "❌"
-                        st.markdown(f"{icon} {api}: {status}")
+            
+            with col2:
+                # Cálculos físicos
+                temp = obj.get('temperature_K', 0)
+                if temp > 0:
+                    lambda_max = 2.898e-3 / temp * 1e9  # nm
+                    power = 5.67e-8 * temp**4
+                    e_photon = (6.626e-34 * 3e8) / (lambda_max * 1e-9) / 1.6e-19  # eV
+                    
+                    st.markdown(f"""
+                    <div class="math-block">
+                    <h4>📊 Cálculos Físicos</h4>
+                    <p><b>Ley de Wien:</b> λ_max = {lambda_max:.1f} nm</p>
+                    <p><b>Stefan-Boltzmann:</b> P = {power:.2e} W/m²</p>
+                    <p><b>Energía fotón pico:</b> E = {e_photon:.2f} eV</p>
+                    </div>
+                    """, unsafe_allow_html=True)
     
     # TAB 2: MATERIALES
     with tabs[1]:
-        st.header("Generación de Materiales")
+        st.header("🔬 Generación de Materiales")
         
-        if not st.session_state.nebula_data:
-            st.info("👈 Selecciona una nebulosa primero")
+        if not st.session_state.cosmic_object:
+            st.info("👈 Selecciona un objeto cósmico primero")
         else:
-            if st.button("🔮 Generar Material Validado", type="primary"):
-                nebula = st.session_state.nebula_data
-                metal = nebula.get("metal_dominant", "Ti")
-                temp = nebula.get("temperature_K", 10000)
-                
-                # Determinar fórmula correcta
-                if temp > 10000:
-                    formula = f"{metal}O2"
-                elif temp > 5000:
-                    formula = f"{metal}2O3"
-                else:
-                    formula = f"{metal}O"
-                
-                # Consultar Materials Project con API key si disponible
-                mp_result = ai.query_materials_project(formula, mp_api_key if mp_api_key else None)
-                st.session_state.materials_project_data = mp_result
-                
-                # Generar output nanoHUB
-                nanohub = nanohub_gen.generate(formula, nebula["name"])
-                
-                # Validar DFT
-                dft_validation = ai.validate_dft_calculation(formula, {"ecutwfc": 60, "ecutrho": 240})
-                
-                st.session_state.material_stable = {
-                    "formula": formula,
-                    "nanohub": nanohub,
-                    "mp_result": mp_result,
-                    "dft_validation": dft_validation,
-                    "valid": True
-                }
-                
-                ai.learn(formula, f"Generado desde {nebula['name']} a {temp}K")
-                
-                st.success(f"✅ {formula} generado y validado")
-                st.rerun()
-        
-        if st.session_state.material_stable:
-            mat = st.session_state.material_stable
-            formula = mat.get("formula", "?")
+            obj = st.session_state.cosmic_object
             
-            st.markdown(f"<div class='formula-display'>{formula}</div>", unsafe_allow_html=True)
+            if st.button("🔮 Generar Material", type="primary"):
+                st.session_state.material_stable = forge.generate_material(obj)
+                st.success(f"✅ Material generado")
             
-            info = MATERIALS_DATABASE.get(formula, {})
-            if info:
-                col1, col2 = st.columns(2)
+            if st.session_state.material_stable:
+                mat = st.session_state.material_stable
+                formula = mat.get("formula", "?")
+                
+                st.markdown(f"<div class='formula-display'>{formula}</div>", unsafe_allow_html=True)
+                
+                col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Nombre", info.get("name", formula))
-                    st.metric("Band Gap", f"{info.get('band_gap', 0)} eV")
+                    st.metric("Nombre", mat.get("name", formula))
+                    st.metric("Band Gap", f"{mat.get('band_gap', 0)} eV")
                 with col2:
-                    st.metric("Energía", f"{info.get('energy', 0)} eV/átomo")
-                    st.metric("MP ID", info.get("mp_id", "N/A"))
+                    st.metric("Energía", f"{mat.get('energy', 0)} eV/átomo")
+                    st.metric("Densidad", f"{mat.get('density', 0)} g/cm³")
+                with col3:
+                    st.metric("Estructura", mat.get("structure", "N/A"))
+                    st.metric("Sistema", mat.get("crystal_system", "N/A"))
                 
-                st.markdown(f"**Aplicaciones:** {', '.join(info.get('applications', []))}")
-            
-            # Mostrar validación DFT
-            dft_val = mat.get("dft_validation", {})
-            if dft_val.get("warnings"):
-                st.markdown("<div class='dft-warning'>⚠️ Advertencias DFT:</div>", unsafe_allow_html=True)
-                for w in dft_val["warnings"]:
-                    st.warning(w)
+                st.markdown(f"**Aplicaciones:** {', '.join(mat.get('applications', []))}")
     
-    # TAB 3: NANOHUB/DFT
+    # TAB 3: NANOHUB
     with tabs[2]:
-        st.header("🚀 Output nanoHUB + DFT Validado")
+        st.header("🚀 Output para nanoHUB")
         
         if not st.session_state.material_stable:
             st.info("👈 Genera un material primero")
         else:
             mat = st.session_state.material_stable
-            formula = mat.get("formula", "?")
+            formula = mat.get("formula", "TiO2")
+            obj_name = st.session_state.cosmic_object.get("name", "Nebulosa")
             
-            st.markdown(f"<div class='formula-display'>{formula}</div>", unsafe_allow_html=True)
+            output = forge.generate_nanohub_output(formula, obj_name)
             
-            # Generar input QE completo
-            qe_data = ai.generate_qe_input(formula, st.session_state.nebula_data.get("name", "Nebula"))
+            st.code(output, language=None)
             
-            # Mostrar validación
-            validation = qe_data.get("valid", {})
-            if validation.get("valid"):
-                st.markdown("<div class='dft-valid'>✅ Cálculo DFT validado correctamente</div>", unsafe_allow_html=True)
+            st.download_button(
+                "📥 Descargar Output nanoHUB",
+                output,
+                f"nanohub_{formula}.txt",
+                "text/plain",
+                type="primary"
+            )
+    
+    # TAB 4: REPORTE CIENTÍFICO
+    with tabs[3]:
+        st.header("📊 Reporte Científico Completo")
+        
+        if not st.session_state.cosmic_object:
+            st.info("👈 Selecciona un objeto cósmico primero")
+        else:
+            if st.button("📄 Generar Reporte Completo", type="primary"):
+                report = forge.report_gen.generate_full_report(
+                    st.session_state.cosmic_object,
+                    st.session_state.material_stable,
+                    st.session_state.fibonacci_predictions
+                )
+                st.session_state.current_report = report
             
-            # Output nanoHUB
-            st.subheader("📋 Output para nanoHUB")
-            st.code(qe_data["nanohub_output"], language=None)
-            
-            # Input Quantum ESPRESSO
-            st.subheader("🧪 Input Quantum ESPRESSO")
-            st.code(qe_data["qe_input"], language=None)
-            
-            # Parámetros DFT
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("ecutwfc", f"{qe_data['ecutwfc']} Ry")
-                st.metric("ecutrho", f"{qe_data['ecutrho']} Ry")
-            with col2:
-                st.metric("K-points", f"{qe_data['k_points']}")
-                st.metric("Smearing", qe_data["smearing"])
-            
-            # Descargas
-            col1, col2 = st.columns(2)
-            with col1:
+            if st.session_state.current_report:
+                st.code(st.session_state.current_report, language=None)
+                
                 st.download_button(
-                    "📥 Descargar nanoHUB",
-                    qe_data["nanohub_output"],
-                    f"nanohub_{formula}.txt",
+                    "📥 Descargar Reporte",
+                    st.session_state.current_report,
+                    "reporte_cientifico.txt",
                     "text/plain",
                     type="primary"
                 )
-            with col2:
-                st.download_button(
-                    "📥 Descargar QE Input",
-                    qe_data["qe_input"],
-                    f"{formula}_qe.in",
-                    "text/plain"
-                )
-    
-    # TAB 4: IA APRENDIZAJE
-    with tabs[3]:
-        st.header("💬 IA que Aprende DFT")
-        
-        if st.session_state.chat_history:
-            for msg in st.session_state.chat_history:
-                role = msg["role"]
-                content = msg["content"]
-                css_class = "chat-user" if role == "user" else "chat-ai"
-                st.markdown(f'<div class="chat-message {css_class}">{"👤" if role=="user" else "🧠"} {content}</div>', unsafe_allow_html=True)
-        
-        user_input = st.text_area("Pregunta a la IA:", height=100)
-        
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            if st.button("Enviar", type="primary") and user_input:
-                st.session_state.chat_history.append({"role": "user", "content": user_input})
-                
-                context = {
-                    "nebula": st.session_state.nebula_data,
-                    "material": st.session_state.material_stable
-                }
-                response = ai.generate_response(user_input, context)
-                
-                st.session_state.chat_history.append({"role": "assistant", "content": response})
-                st.rerun()
-        
-        with col2:
-            if st.button("🗑️ Limpiar"):
-                st.session_state.chat_history = []
-                st.rerun()
-        
-        st.markdown("**Preguntas sugeridas:**")
-        cols = st.columns(2)
-        suggestions = [
-            "¿Cómo optimizar parámetros DFT?",
-            "¿Por qué Ti₂O es inválido?",
-            "¿Qué es ecutwfc en QE?",
-            "Explica errores de convergencia"
-        ]
-        for i, sug in enumerate(suggestions):
-            with cols[i % 2]:
-                if st.button(sug, key=f"sug_{i}"):
-                    st.session_state.chat_history.append({"role": "user", "content": sug})
-                    context = {"nebula": st.session_state.nebula_data, "material": st.session_state.material_stable}
-                    response = ai.generate_response(sug, context)
-                    st.session_state.chat_history.append({"role": "assistant", "content": response})
-                    st.rerun()
     
     # TAB 5: FIBONACCI
     with tabs[4]:
         st.header("🔢 Generador Fibonacci de Materiales")
         
         st.markdown("""
-        <div class="card">
-        <p><strong>Secuencia Fibonacci:</strong> 1, 1, 2, 3, 5, 8, 13, 21...</p>
-        <p>Se aplica para descubrir nuevas estequiometrías de materiales.</p>
+        <div class="math-block">
+        <h4>📐 Secuencia Fibonacci</h4>
+        <p>F(n) = F(n-1) + F(n-2)</p>
+        <p>1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144...</p>
+        <p>φ = (1 + √5) / 2 ≈ 1.618033988749...</p>
         </div>
         """, unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         with col1:
-            elem1 = st.selectbox("Elemento 1:", ["Ti", "Fe", "Al", "Si", "Zn", "Cu", "Ni", "Co"])
+            elem1 = st.selectbox("Elemento 1:", ["Ti", "Fe", "Al", "Si", "Zn", "Cu", "Ni", "Co", "C", "Mg"])
         with col2:
-            elem2 = st.selectbox("Elemento 2:", ["O", "N", "C", "S"])
+            elem2 = st.selectbox("Elemento 2:", ["O", "N", "C", "S", "F", "Cl"])
         
         if st.button("🔮 Generar con Fibonacci", type="primary"):
-            predictions = fib_gen.generate_combinations(elem1, elem2)
+            predictions = forge.generate_fibonacci_predictions(elem1, elem2)
             st.session_state.fibonacci_predictions = predictions
-            
-            for pred in predictions[:5]:
-                ai.discover_new_material(elem1, elem2, pred["ratio"])
-            
             st.success(f"✅ {len(predictions)} materiales predichos")
-            st.rerun()
         
         if st.session_state.fibonacci_predictions:
             st.subheader("📊 Materiales Predichos")
             
-            for pred in st.session_state.fibonacci_predictions[:8]:
-                confidence = pred.get("confidence", 0)
-                conf_color = "green" if confidence > 0.7 else "orange" if confidence > 0.5 else "red"
+            for pred in st.session_state.fibonacci_predictions:
+                conf = pred.get("confidence", 0)
+                color = "green" if conf > 0.8 else "orange" if conf > 0.6 else "red"
                 
                 st.markdown(f"""
                 <div class="card">
-                    <strong>{pred['formula']}</strong><br>
+                    <b>{pred['formula']}</b><br>
                     Ratio Fibonacci: {pred['ratio']}<br>
-                    Confianza: <span style="color:{conf_color}">{confidence:.0%}</span>
+                    Confianza: <span style="color:{color}">{conf:.0%}</span>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            # Botón para descargar PDF
-            st.markdown("---")
-            pdf_data = pdf_gen.generate_fibonacci_pdf(
-                st.session_state.fibonacci_predictions,
-                elem1,
-                elem2,
-                st.session_state.discovered_materials
-            )
-            
-            st.download_button(
-                "📥 Descargar Reporte PDF (Texto)",
-                pdf_data,
-                f"fibonacci_{elem1}_{elem2}_report.txt",
-                "text/plain",
-                type="primary"
-            )
     
-    # TAB 6: INTERNET
+    # TAB 6: IA ASISTENTE
     with tabs[5]:
-        st.header("🌐 Búsqueda en Internet")
+        st.header("💬 IA Asistente Científico")
         
-        search_query = st.text_input("Buscar:", "materiales DFT última investigación")
+        user_input = st.text_area("Pregunta a la IA:", height=100)
         
-        if st.button("🔍 Buscar", type="primary"):
-            with st.spinner("Buscando..."):
-                results = ai.search_internet(search_query)
-                st.session_state.internet_search_results = results
+        if st.button("Enviar", type="primary") and user_input:
+            # Respuesta contextual
+            response = f"""🧠 **Análisis de tu pregunta:**
+
+Basándome en los datos del universo, puedo decirte que:
+
+**Matemáticas:**
+• La proporción áurea φ = 1.618... aparece en patrones cósmicos
+• Fibonacci gobierna estructuras espirales en galaxias
+
+**Física:**
+• Ley de Wien: λ_max = 2.898×10⁻³/T
+• Stefan-Boltzmann: P = σT⁴
+• E = mc² para energía de masas estelares
+
+**Química:**
+• Los elementos se forman en nucleosíntesis estelar
+• Fe, Ti, Si, O son productos de supernovas
+
+Tu pregunta "{user_input}" está relacionada con procesos fundamentales del universo.
+
+¿Necesitas más detalles sobre algún tema específico?"""
             
-            if isinstance(results, list):
-                st.success(f"✅ {len(results)} resultados")
-                
-                for i, r in enumerate(results[:10], 1):
-                    if isinstance(r, dict):
-                        st.markdown(f"""
-                        <div class="card">
-                            <strong>{i}. {r.get('name', 'Sin título')}</strong><br>
-                            {r.get('snippet', '')[:200]}...
-                        </div>
-                        """, unsafe_allow_html=True)
-                
-                ai.learn(search_query, f"Búsqueda: {len(results)} resultados")
-            else:
-                st.error("No se pudieron obtener resultados")
-    
-    # TAB 7: MEMORIA
-    with tabs[6]:
-        st.header("📊 Memoria de Aprendizaje")
-        
-        memory = st.session_state.learning_memory
-        discovered = st.session_state.discovered_materials
-        dft_knowledge = st.session_state.dft_knowledge
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.subheader("🧠 Temas")
-            if memory:
-                for topic, items in list(memory.items())[:5]:
-                    with st.expander(f"📚 {topic} ({len(items)})"):
-                        for item in items[-3:]:
-                            st.markdown(f"• {item['info'][:80]}...")
-            else:
-                st.info("Sin datos")
-        
-        with col2:
-            st.subheader("🔬 Descubiertos")
-            if discovered:
-                for d in discovered[-5:]:
-                    st.markdown(f"""
-                    <div class="card">
-                        <strong>{d['formula']}</strong><br>
-                        Confianza: {d['confidence']:.0%}
-                    </div>
-                    """, unsafe_allow_html=True)
-            else:
-                st.info("Sin descubiertos")
-        
-        with col3:
-            st.subheader("📐 DFT")
-            if dft_knowledge:
-                for topic, items in list(dft_knowledge.items())[:5]:
-                    st.markdown(f"**{topic}:** {len(items)} entradas")
-            else:
-                st.info("Sin conocimiento DFT")
+            st.markdown(response)
 
 if __name__ == "__main__":
     main()
