@@ -18,3 +18,7 @@ tensorflow
 torch
 sqlalchemy
 streamlit-authenticator
+aflow
+oqmd
+nomad-api
+mpds-client
