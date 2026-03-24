@@ -472,17 +472,66 @@ class IntegratedMaterialValidator:
             # Score de manufacturabilidad (0-100)
             mach_score = min(100, max(0, machinability))
 
+            # Cálculos adicionales
+            young_mod = bulk_mod * 0.7  # Aproximación
+            shear_mod = bulk_mod * 0.4  # Aproximación
+            poisson = 0.25 + (hardness / 20)  # Relación empírica
+            thermal_cond = 15 / (hardness + 1)  # W/mK estimado
+
+            # Clasificación del material
+            if hardness > 7:
+                material_class = "Très dur (Céramique/Verre)"
+            elif hardness > 5:
+                material_class = "Dur (Métal duración)"
+            elif hardness > 3:
+                material_class = "Semi-dur (Alliage)"
+            else:
+                material_class = "Molle (Métal mou/Alliage léger)"
+
+            # Recomendaciones de procesamiento
+            processing_notes = []
+            if hardness > 6:
+                processing_notes.append("Usar herramientas de carburo o cerámica")
+                processing_notes.append("Baja velocidad de corte, alta refrigeración")
+            else:
+                processing_notes.append("Herramientas HSS o carburo válidas")
+                processing_notes.append("Velocidad media con refrigeración estándar")
+
+            if bulk_mod > 150:
+                processing_notes.append("Alta rigidéz - good for structural parts")
+            if mach_score > 70:
+                processing_notes.append("Fácil mecanizado - bajo costo de fabricación")
+
             return {
                 "hardness_mohs": round(hardness, 2),
                 "bulk_modulus_gpa": round(bulk_mod, 2),
+                "young_modulus_gpa": round(young_mod, 2),
+                "shear_modulus_gpa": round(shear_mod, 2),
+                "poisson_ratio": round(poisson, 3),
+                "thermal_conductivity_wmk": round(thermal_cond, 2),
                 "machinability_index": round(mach_score, 1),
+                "material_classification": material_class,
+                "processing_recommendations": processing_notes,
                 "cnc_recommended_rpm": self._rpm_recommendation(hardness),
                 "coolant_required": hardness > 5.5,
                 "tool_recommendation": "Carbide/Ceramic" if hardness > 6 else "HSS",
                 "fracture_risk": "High" if hardness > 7 and bulk_mod > 200 else "Low",
             }
         except Exception as e:
-            return {"error": str(e), "machinability_index": 50, "hardness_mohs": 5.0}
+            return {
+                "error": str(e),
+                "machinability_index": 50,
+                "hardness_mohs": 5.0,
+                "bulk_modulus_gpa": 100.0,
+                "young_modulus_gpa": 70.0,
+                "shear_modulus_gpa": 40.0,
+                "poisson_ratio": 0.28,
+                "thermal_conductivity_wmk": 10.0,
+                "material_classification": "Semi-dur (Alliage)",
+                "processing_recommendations": [
+                    "Análisis limitado - pymatgen no disponible"
+                ],
+            }
 
     def _rpm_recommendation(self, hardness):
         if hardness < 3:
