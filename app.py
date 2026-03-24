@@ -557,6 +557,8 @@ class IntegratedMaterialValidator:
                 "score": 50,
                 "category": "Medio",
                 "economic_viability": "Media",
+                "cost_per_kg": 100.0,
+                "cost_per_mol": 10.0,
             }
 
     def synthesizability_score(self, chemical, thermo, mechanical):
