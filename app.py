@@ -3,11 +3,23 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
-from pymatgen.core import Composition, Element, Structure
-from pymatgen.ext.matproj import MPRester
-from mp_api.client import MPRester as NewMPRester
-import smact
-from smact.screening import pauling_test
+
+try:
+    from pymatgen.core import Composition, Element, Structure
+    from pymatgen.ext.matproj import MPRester
+    from mp_api.client import MPRester as NewMPRester
+    PYMATGEN_AVAILABLE = True
+except ImportError:
+    PYMATGEN_AVAILABLE = False
+    st.warning("pymatgen not installed. Some features will be limited.")
+
+try:
+    import smact
+    from smact.screening import pauling_test
+    SMACT_AVAILABLE = True
+except ImportError:
+    SMACT_AVAILABLE = False
+
 import json
 import requests
 from datetime import datetime
