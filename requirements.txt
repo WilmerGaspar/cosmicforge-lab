@@ -1,17 +1,10 @@
-streamlit==1.55.0
-pymatgen==2024.11.13
-matminer==0.10.0
-ase==3.23.0
-scikit-learn==1.5.1
-mendeleev==0.17.0
-mp-api==0.41.2
-plotly==5.22.0
+streamlit
+plotly
 pandas
-numpy==1.26.4
-requests==2.32.3
-openai==1.35.0
+numpy
+requests
+openai
 groq
-geneticalgorithm==1.0.2
-sqlalchemy==2.0.30
-streamlit-authenticator==0.3.2
+scikit-learn
+sqlalchemy
 
