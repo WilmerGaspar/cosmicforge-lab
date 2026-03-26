@@ -884,14 +884,84 @@ def main():
     # Materials Project Connection Status
     mp_connected = bool(mp_key and len(mp_key) > 5)
     if mp_connected:
-        st.sidebar.markdown(
-            """
-        <div style="background-color: #001100; border: 1px solid #00ff00; border-radius: 5px; padding: 10px; margin: 5px 0;">
-            <span style="color: #00ff00;">●</span> <b>Materials Project:</b> <span style="color: #00ff00;">CONECTADO</span>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        with st.sidebar.spinner("Conectando a Materials Project..."):
+            try:
+                if PYMATGEN_AVAILABLE:
+                    from mp_api.client import MPRester
+
+                    mp_client = MPRester(mp_key)
+                    # Get total materials count
+                    totalMaterials = mp_client.materials.summary.count()
+
+                    # Get material families/categories
+                    categories = mp_client.materials.search(
+                        fields=["nelements", "composition", "symmetry"]
+                    )
+                    # Count by elements
+                    elem_counts = {
+                        "1 elemento": 0,
+                        "2 elementos": 0,
+                        "3 elementos": 0,
+                        "4+ elementos": 0,
+                    }
+                    for mat in categories[:1000]:  # Sample for classification
+                        if mat.nelements:
+                            if mat.nelements == 1:
+                                elem_counts["1 elemento"] += 1
+                            elif mat.nelements == 2:
+                                elem_counts["2 elementos"] += 1
+                            elif mat.nelements == 3:
+                                elem_counts["3 elementos"] += 1
+                            else:
+                                elem_counts["4+ elementos"] += 1
+
+                    st.sidebar.markdown(
+                        f"""
+                    <div style="background-color: #001100; border: 1px solid #00ff00; border-radius: 5px; padding: 10px; margin: 5px 0;">
+                        <span style="color: #00ff00;">●</span> <b>Materials Project:</b> <span style="color: #00ff00;">CONECTADO</span><br>
+                        <small style="color: #00aa00;">📊 Base de datos: {totalMaterials:,} materiales</small>
+                    </div>
+                    """,
+                        unsafe_allow_html=True,
+                    )
+
+                    # Show classification breakdown
+                    st.sidebar.markdown(
+                        """
+                    <div style="background-color: #001100; border: 1px solid #00ff00; border-radius: 5px; padding: 10px; margin: 5px 0;">
+                        <b style="color: #00ff00;">📋 Clasificación por Elementos:</b><br>
+                        <small style="color: #00aa00;">
+                        ▪ 1 elemento: binary compounds<br>
+                        ▪ 2 elementos: ternary compounds<br>
+                        ▪ 3 elementos: quaternary compounds<br>
+                        ▪ 4+ elementos: complex compounds
+                        </small>
+                    </div>
+                    """,
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    # pymatgen not available but API key provided
+                    st.sidebar.markdown(
+                        """
+                    <div style="background-color: #001100; border: 1px solid #00ff00; border-radius: 5px; padding: 10px; margin: 5px 0;">
+                        <span style="color: #ffff00;">●</span> <b>Materials Project:</b> <span style="color: #ffff00;">CONEXIÓN PARCIAL</span><br>
+                        <small style="color: #888;">API key ingresada pero pymatgen no disponible</small>
+                    </div>
+                    """,
+                        unsafe_allow_html=True,
+                    )
+
+            except Exception as e:
+                st.sidebar.markdown(
+                    f"""
+                <div style="background-color: #110000; border: 1px solid #ff0000; border-radius: 5px; padding: 10px; margin: 5px 0;">
+                    <span style="color: #ff0000;">●</span> <b>Materials Project:</b> <span style="color: #ff0000;">ERROR</span><br>
+                    <small style="color: #888;">{str(e)[:60]}</small>
+                </div>
+                """,
+                    unsafe_allow_html=True,
+                )
     else:
         st.sidebar.markdown(
             """
