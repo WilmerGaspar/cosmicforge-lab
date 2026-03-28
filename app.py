@@ -876,6 +876,9 @@ def main():
         unsafe_allow_html=True,
     )
 
+    # Initialize API key variable
+    mp_key = ""
+
     # Sidebar - Configuración
     st.sidebar.title("⚙️ Configuración")
 
